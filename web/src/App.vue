@@ -38,7 +38,7 @@
         />
         <div class="lb-header-right">
           <el-tag size="small" type="success" effect="plain">纯本地运算 · 无广告</el-tag>
-          <ThemeSwitch />
+            <ThemeSwitch :show-palette="true" />
         </div>
       </el-header>
       <el-main class="lb-main">

@@ -13,7 +13,20 @@ declare global {
   }
 }
 
+import type { ThemePaletteId, ThemeTokens } from './theme/palettes'
+
 export type ThemeMode = 'light' | 'dark' | 'system'
+
+export interface ThemeCustomColors {
+  light?: Partial<ThemeTokens>
+  dark?: Partial<ThemeTokens>
+}
+
+export interface ThemePreference {
+  mode: ThemeMode
+  palette: ThemePaletteId
+  custom?: ThemeCustomColors
+}
 
 export interface FavoriteItem {
   toolId: string

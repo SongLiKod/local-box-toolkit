@@ -1,6 +1,19 @@
-/* 主题 CSS 变量（直接采用 TechDoc 3 / PRD 5 定义色值，:root 挂载，切换即全局生效） */
+/* 主题 CSS 变量：默认晴空蓝，运行时由 applyTheme 写入 html 内联变量覆盖 */
 
-/* 浅色主题 */
+:root {
+  --color-bg-page: #F5F7FA;
+  --color-bg-card: #FFFFFF;
+  --color-text-primary: #1D2129;
+  --color-text-secondary: #6E7681;
+  --color-border: #E5E6EB;
+  --color-primary: #1677FF;
+  --color-primary-light: #E8F3FF;
+  --color-success: #00B42A;
+  --color-warning: #FF7D00;
+  --color-error: #F53F3F;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+}
+
 :root.light {
   --color-bg-page: #F5F7FA;
   --color-bg-card: #FFFFFF;
@@ -15,7 +28,6 @@
   --color-shadow: rgba(0, 0, 0, 0.08);
 }
 
-/* 深色主题 */
 :root.dark {
   --color-bg-page: #17171A;
   --color-bg-card: #232324;

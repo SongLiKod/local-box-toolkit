@@ -1,5 +1,5 @@
 <template>
-  <view :class="['lb-page', themeClass]">
+  <view :class="['lb-page', themeClass]" :style="themeStyle">
     <view class="lb-card">
       <view class="lb-head">
         <view>
@@ -20,7 +20,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { toolById } from '../registry'
-import { themeClass } from '../composables/useTheme'
+import { themeClass, themeStyle } from '../composables/useTheme'
 import { store } from '../store'
 
 const props = defineProps<{ toolId: string; notice?: string }>()

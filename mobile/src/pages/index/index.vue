@@ -1,5 +1,5 @@
 <template>
-  <view :class="['lb-page', themeClass]">
+  <view :class="['lb-page', themeClass]" :style="themeStyle">
     <view class="lb-card lb-hero">
       <view class="lb-hero-title">LocalBox 本地工具箱</view>
       <view class="lb-desc">全部运算本地执行 · 文件不上传 · 无广告 · 基础功能无次数限制</view>
@@ -12,6 +12,17 @@
           @click="pickTheme(m.value)"
         >
           {{ m.label }}
+        </view>
+      </view>
+      <view class="lb-theme-row">
+        <view
+          v-for="p in palettes"
+          :key="p.id"
+          class="lb-chip"
+          :class="{ active: themePalette === p.id }"
+          @click="pickPalette(p.id)"
+        >
+          {{ p.name }}
         </view>
       </view>
     </view>
@@ -45,14 +56,15 @@
 
 <script setup lang="ts">
 import { CATEGORIES, TOOLS, type ToolMeta } from '../registry'
-import { themeClass, themeMode, setThemeMode } from '../composables/useTheme'
-import type { ThemeMode } from '@localbox/core/index'
+import { themeClass, themeStyle, themeMode, themePalette, setThemeMode, setThemePalette } from '../composables/useTheme'
+import { THEME_PRESETS, type ThemeMode, type ThemePaletteId } from '@localbox/core/index'
 
 const modes: Array<{ value: ThemeMode; label: string }> = [
   { value: 'light', label: '浅色' },
   { value: 'dark', label: '深色' },
   { value: 'system', label: '跟随系统' },
 ]
+const palettes = THEME_PRESETS
 
 function toolsOf(cat: string): ToolMeta[] {
   return TOOLS.filter((t) => t.category === cat)
@@ -63,6 +75,9 @@ function go(route: string): void {
 function pickTheme(m: ThemeMode): void {
   void setThemeMode(m)
 }
+function pickPalette(id: ThemePaletteId): void {
+  void setThemePalette(id)
+}
 </script>
 
 <style scoped>
@@ -72,6 +87,7 @@ function pickTheme(m: ThemeMode): void {
 }
 .lb-theme-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
   margin-top: 16rpx;
 }

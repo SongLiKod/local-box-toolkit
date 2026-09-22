@@ -14,6 +14,23 @@ describe('本地持久化仓库', () => {
     expect(await s.getThemeMode()).toBe('dark')
   })
 
+  it('配色方案与自定义主题可持久化，并兼容旧版 mode', async () => {
+    const s = mk()
+    expect(await s.getThemePreference()).toEqual({ mode: 'light', palette: 'azure' })
+    await s.setThemePreference({
+      mode: 'dark',
+      palette: 'custom',
+      custom: { dark: { primary: '#9B8CFF' } },
+    })
+    const pref = await s.getThemePreference()
+    expect(pref.palette).toBe('custom')
+    expect(pref.custom?.dark?.primary).toBe('#9B8CFF')
+    const adapter = new MemoryAdapter()
+    await adapter.set('themeMode', 'system')
+    const legacy = new LocalStore(adapter)
+    expect(await legacy.getThemePreference()).toEqual({ mode: 'system', palette: 'azure' })
+  })
+
   it('收藏切换', async () => {
     const s = mk()
     expect(await s.toggleFavorite('uuid')).toBe(true)
