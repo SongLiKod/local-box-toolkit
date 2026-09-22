@@ -88,6 +88,19 @@ body {
   background: #fff;
 }
 
+/* 可点击放大的图片 */
+.lb-zoomable {
+  cursor: zoom-in;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+.lb-zoomable:hover {
+  box-shadow: 0 4px 14px var(--color-shadow);
+  transform: translateY(-1px);
+}
+.lb-preview-grid img.lb-zoomable {
+  cursor: zoom-in;
+}
+
 .lb-history-list {
   max-height: 300px;
   overflow: auto;

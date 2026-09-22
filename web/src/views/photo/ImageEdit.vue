@@ -61,12 +61,13 @@
         </div>
         <div class="lb-group">
           <el-button size="small" @click="reset" :disabled="!original">重置</el-button>
+          <el-button size="small" @click="previewCanvas">放大预览</el-button>
           <el-button type="primary" size="small" @click="exportPng">导出PNG</el-button>
           <el-button type="primary" size="small" @click="exportJpg">导出JPG</el-button>
         </div>
       </div>
       <div class="lb-canvas-wrap">
-        <canvas ref="canvasRef" class="lb-canvas"></canvas>
+        <canvas ref="canvasRef" class="lb-canvas lb-zoomable" @click="previewCanvas"></canvas>
       </div>
     </div>
   </div>
@@ -79,6 +80,7 @@ import ToolHeader from '../../components/ToolHeader.vue'
 import FileDrop from '../../components/FileDrop.vue'
 import { editorTools, mattingTools, saveBlob, loadImage, canvasToBlob } from '@localbox/core/index'
 import { useToolHistory } from '../../composables/useTool'
+import { openImageViewer } from '../../composables/useImageViewer'
 
 const files = ref<File[]>([])
 const loaded = ref(false)
@@ -187,6 +189,12 @@ function doRemoveBg(): void {
 
 function reset(): void {
   if (original) loadIntoEditor(original)
+}
+
+function previewCanvas(): void {
+  const canvas = canvasRef.value
+  if (!canvas || canvas.width === 0) return
+  openImageViewer(canvas.toDataURL('image/png'))
 }
 
 async function exportPng(): Promise<void> {

@@ -36,6 +36,7 @@ export default defineConfig({
   },
   server: {
     fs: { allow: ['..'] },
+    allowedHosts: ['.monkeycode-ai.online'],
   },
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],

@@ -1,0 +1,341 @@
+name: Release Build
+
+# 三端发布：Android APK（uni-app 离线打包 + keystore 签名）、Web、Windows 桌面。
+# Android 构建严格对齐参考工作流 SongLiKod/screen-pulse-android 的签名与出包逻辑。
+#
+# 需要配置的 Secrets：
+#   KEYSTORE_BASE64      签名证书 .jks 的 base64 内容
+#   KEYSTORE_PASSWORD    keystore 口令
+#   KEY_ALIAS            证书别名
+#   KEY_PASSWORD         证书口令
+# 需要配置的 Variables：
+#   DCLOUD_APPID           DCloud AppID，形如 __UNI__XXXXXXX
+#   DCLOUD_APPKEY          DCloud 离线打包 AppKey（与包名、签名证书 SHA1 绑定）
+#   DCLOUD_ANDROID_SDK_URL Android 离线 SDK 压缩包地址（版本需与 uni-app 编译器一致）
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version tag (e.g., v1.1.0). Leave empty to build without releasing.'
+        required: false
+        type: string
+      release_name:
+        description: 'Release name (optional, defaults to tag)'
+        required: false
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check signing secrets
+        if: ${{ github.event.inputs.tag != '' }}
+        run: |
+          if [ -z "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 is not configured."
+            exit 1
+          fi
+          if [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ]; then
+            echo "::error::Secret KEYSTORE_PASSWORD is not configured."
+            exit 1
+          fi
+          if [ -z "${{ secrets.KEY_ALIAS }}" ]; then
+            echo "::error::Secret KEY_ALIAS is not configured."
+            exit 1
+          fi
+          if [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
+            echo "::error::Secret KEY_PASSWORD is not configured."
+            exit 1
+          fi
+          echo "All signing secrets are configured."
+
+      - name: Decode Keystore
+        if: ${{ github.event.inputs.tag != '' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d ' \t\r\n' | base64 --decode > android/keystore.jks || true
+          SIZE=$(wc -c < android/keystore.jks)
+          echo "Decoded keystore size: $SIZE bytes"
+          if [ "$SIZE" -eq 0 ]; then
+            echo "::error::Decoded keystore is empty. Check the KEYSTORE_BASE64 secret."
+            exit 1
+          fi
+          MAGIC=$(xxd -p -l 4 android/keystore.jks)
+          echo "Keystore magic bytes: $MAGIC"
+          if [ "$MAGIC" = "feedfeed" ]; then
+            echo "Keystore format: JKS"
+          else
+            echo "::warning::Keystore does not look like JKS (magic != feedfeed). It may be PKCS12. Regenerate with '-storetype JKS' if signing fails."
+          fi
+
+      - name: Create keystore.properties
+        if: ${{ github.event.inputs.tag != '' }}
+        run: |
+          printf 'storeFile=keystore.jks\n' > android/keystore.properties
+          printf 'storePassword=%s\n' "${{ secrets.KEYSTORE_PASSWORD }}" >> android/keystore.properties
+          printf 'keyAlias=%s\n' "${{ secrets.KEY_ALIAS }}" >> android/keystore.properties
+          printf 'keyPassword=%s\n' "${{ secrets.KEY_PASSWORD }}" >> android/keystore.properties
+
+      - name: Check DCloud configuration
+        run: |
+          if [ -z "${{ vars.DCLOUD_APPID }}" ]; then
+            echo "::error::Variable DCLOUD_APPID is not configured."
+            exit 1
+          fi
+          if [ -z "${{ vars.DCLOUD_ANDROID_SDK_URL }}" ]; then
+            echo "::error::Variable DCLOUD_ANDROID_SDK_URL is not configured."
+            exit 1
+          fi
+          if [ "${{ github.event.inputs.tag }}" != "" ] && [ -z "${{ vars.DCLOUD_APPKEY }}" ]; then
+            echo "::error::Variable DCLOUD_APPKEY is required for a signed release build."
+            exit 1
+          fi
+          echo "DCloud configuration is present."
+
+      - name: Build uni-app resources
+        run: |
+          npm --prefix mobile install --no-audit --no-fund
+          npm --prefix mobile run build:app
+          if [ ! -f mobile/dist/build/app/manifest.json ]; then
+            echo "::error::uni-app resource bundle not found at mobile/dist/build/app"
+            exit 1
+          fi
+
+      - name: Download DCloud Android offline SDK
+        run: |
+          curl -fL --retry 3 --max-time 900 "${{ vars.DCLOUD_ANDROID_SDK_URL }}" -o /tmp/dcloud-sdk.zip
+          unzip -q /tmp/dcloud-sdk.zip -d /tmp/dcloud-sdk
+          SDK_DIR="$(find /tmp/dcloud-sdk -maxdepth 4 -type d -name 'HBuilder-Integrate-AS' | head -n1)"
+          if [ -z "$SDK_DIR" ]; then
+            echo "::error::HBuilder-Integrate-AS not found in the offline SDK archive."
+            exit 1
+          fi
+          echo "SDK_DIR=$SDK_DIR" >> "$GITHUB_ENV"
+
+      - name: Prepare native project
+        env:
+          APPID: ${{ vars.DCLOUD_APPID }}
+          APPKEY: ${{ vars.DCLOUD_APPKEY }}
+        run: |
+          cp android/signing.gradle "$SDK_DIR/signing.gradle"
+          if [ -f android/keystore.jks ]; then cp android/keystore.jks "$SDK_DIR/keystore.jks"; fi
+          if [ -f android/keystore.properties ]; then cp android/keystore.properties "$SDK_DIR/keystore.properties"; fi
+          WWW_DIR="$PWD/mobile/dist/build/app" bash android/setup-offline-sdk.sh
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x "$SDK_DIR/gradlew"
+
+      - name: Build APK
+        working-directory: ${{ env.SDK_DIR }}
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "Tag provided (${{ github.event.inputs.tag }}): building signed release APK"
+            ./gradlew assembleRelease
+          else
+            echo "No tag: building debug APK for compile test"
+            ./gradlew assembleDebug
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-build
+          path: |
+            **/build/outputs/apk/debug/*.apk
+            **/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  web:
+    name: Build Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm --prefix web ci
+
+      - name: Build web
+        run: npm --prefix web run build
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-web
+          path: web/dist
+          if-no-files-found: error
+          retention-days: 14
+
+  desktop:
+    name: Build Windows Desktop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            electron/package-lock.json
+
+      - name: Install web dependencies
+        run: npm --prefix web ci
+
+      - name: Build web renderer
+        run: npm --prefix web run build
+
+      - name: Install electron dependencies
+        run: npm --prefix electron ci
+
+      - name: Build and package Windows app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm --prefix electron run dist -- --win
+
+      - name: Upload Desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-desktop-win
+          path: |
+            electron/release/*.exe
+            electron/release/*.zip
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    needs: [build, web, desktop]
+    if: ${{ github.event.inputs.tag != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifact
+
+      - name: Prepare release files
+        run: |
+          mkdir -p apk assets
+          echo "Downloaded artifact tree:"
+          find artifact -type f -print
+          TAG="${{ github.event.inputs.tag }}"
+
+          mapfile -t APKS < <(find artifact -name '*.apk' -type f | sort)
+          if [ ${#APKS[@]} -eq 0 ]; then
+            echo "::error::No APK found in downloaded artifact"
+            exit 1
+          fi
+          for SRC in "${APKS[@]}"; do
+            BASE=$(basename "$SRC")
+            if [[ "$BASE" == *release* ]]; then
+              DEST="apk/LocalBox-${TAG}.apk"
+            elif [[ "$BASE" == *debug* ]]; then
+              DEST="apk/LocalBox-${TAG}-debug.apk"
+            else
+              DEST="apk/${BASE}"
+            fi
+            cp "$SRC" "$DEST"
+            echo "Prepared $DEST from $SRC"
+          done
+
+          if [ -d artifact/LocalBox-web ]; then
+            mkdir -p pkg-web
+            cp -R artifact/LocalBox-web/. pkg-web/
+            (cd pkg-web && zip -qr "../assets/LocalBox-web-${TAG}.zip" .)
+            echo "Prepared assets/LocalBox-web-${TAG}.zip"
+          fi
+
+          mapfile -t EXES < <(find artifact -name '*.exe' -type f | sort)
+          for SRC in "${EXES[@]}"; do
+            BASE=$(basename "$SRC")
+            DEST="assets/${BASE%.exe}-${TAG}.exe"
+            cp "$SRC" "$DEST"
+            echo "Prepared $DEST from $SRC"
+          done
+
+          ls -lh apk/
+          ls -lh assets/
+
+      - name: Determine release name
+        id: release_info
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          NAME="${{ github.event.inputs.release_name }}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "name=${NAME:-$TAG}" >> $GITHUB_OUTPUT
+
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a ${{ steps.release_info.outputs.tag }} -m "Release ${{ steps.release_info.outputs.tag }}" || true
+          git push origin ${{ steps.release_info.outputs.tag }} || true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: ${{ steps.release_info.outputs.name }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          files: |
+            apk/*.apk
+            assets/*
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -48,12 +48,14 @@
       </el-main>
     </el-container>
   </el-container>
+  <ImageViewer />
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ThemeSwitch from './components/ThemeSwitch.vue'
+import ImageViewer from './components/ImageViewer.vue'
 import { CATEGORIES, TOOLS, type ToolMeta } from './registry'
 import { favorites, loadFavorites } from './composables/useFavorites'
 

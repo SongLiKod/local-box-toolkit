@@ -8,3 +8,5 @@ unpackage/
 .vite/
 coverage/
 web/public/ffmpeg/
+android/keystore.jks
+android/keystore.properties

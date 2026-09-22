@@ -1,9 +1,15 @@
-import { baseName, canvasToBlob } from '../files'
+import { baseName, canvasToBlob, readAsArrayBuffer } from '../files'
 import { openPdf, renderPdfPageToCanvas } from './pdf'
 import { parseDocx } from './docx'
 import { parseWorkbook } from './xlsx'
 import { parsePptx } from './pptx'
-import { htmlToPageCanvases, mergeCanvasesVertical, textToPageCanvases, toGrayscale } from './render'
+import {
+  docxToPageCanvases,
+  htmlToPageCanvases,
+  mergeCanvasesVertical,
+  textToPageCanvases,
+  toGrayscale,
+} from './render'
 import { encodeTiff } from './tiff'
 import type { ConvertedFile, ProgressCb } from '../types'
 
@@ -84,7 +90,16 @@ export async function documentToCanvases(
   grayscale: boolean
 ): Promise<HTMLCanvasElement[]> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
-  if (ext === 'docx' || ext === 'doc') {
+  if (ext === 'docx') {
+    try {
+      const buffer = await readAsArrayBuffer(file)
+      return await docxToPageCanvases(buffer, { dpi, grayscale })
+    } catch {
+      const { html } = await parseDocx(file)
+      return htmlToPageCanvases(html, { dpi, grayscale })
+    }
+  }
+  if (ext === 'doc') {
     const { html } = await parseDocx(file)
     return htmlToPageCanvases(html, { dpi, grayscale })
   }

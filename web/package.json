@@ -17,6 +17,7 @@
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
     "crypto-js": "^4.2.0",
+    "docx-preview": "^0.4.1",
     "element-plus": "^2.7.6",
     "gifenc": "^1.0.3",
     "html2canvas": "^1.4.1",
