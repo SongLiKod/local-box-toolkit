@@ -31,8 +31,8 @@ export function useToolParams<T extends object>(toolId: string, defaults: T): { 
 }
 
 export function useToolHistory(toolId: string) {
-  return (action: string, detail: string): void => {
+  return (action: string, detail: string, payload?: unknown): Promise<void> => {
     const meta = toolById(toolId)
-    void recordHistory(toolId, meta?.name ?? toolId, action, detail)
+    return recordHistory(toolId, meta?.name ?? toolId, action, detail, payload)
   }
 }

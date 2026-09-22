@@ -52,6 +52,20 @@ describe('本地持久化仓库', () => {
     expect((await s.getHistory()).length).toBeLessThanOrEqual(500)
   })
 
+  it('历史记录可保存 payload', async () => {
+    const s = mk()
+    const saved = await s.addHistory({
+      toolId: 'uuid',
+      toolName: 'UUID生成器',
+      action: '生成UUID',
+      detail: 'v4 × 2 · a b',
+      payload: { version: 'v4', count: 2, uuids: ['a', 'b'] },
+    })
+    const list = await s.getHistory()
+    expect(list[0].id).toBe(saved.id)
+    expect(list[0].payload).toEqual({ version: 'v4', count: 2, uuids: ['a', 'b'] })
+  })
+
   it('清空历史', async () => {
     const s = mk()
     await s.addHistory({ toolId: 't', toolName: 'T', action: 'a', detail: 'd' })

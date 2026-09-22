@@ -40,3 +40,58 @@ export function generateUuids(
 export function uuidsToText(list: string[]): string {
   return list.join('\n')
 }
+
+export const UUID_HISTORY_PREVIEW_COUNT = 3
+export const UUID_HISTORY_STORE_LIMIT = 200
+
+export interface UuidHistoryPayload {
+  version: UuidVersion
+  count: number
+  name?: string
+  namespace?: string
+  uuids: string[]
+  truncated?: boolean
+}
+
+export function buildUuidHistoryPayload(
+  version: UuidVersion,
+  uuids: string[],
+  options?: { name?: string; namespace?: string }
+): UuidHistoryPayload {
+  const truncated = uuids.length > UUID_HISTORY_STORE_LIMIT
+  return {
+    version,
+    count: uuids.length,
+    name: options?.name,
+    namespace: options?.namespace,
+    uuids: truncated ? uuids.slice(0, UUID_HISTORY_STORE_LIMIT) : uuids.slice(),
+    truncated,
+  }
+}
+
+export function summarizeUuidHistory(payload: UuidHistoryPayload): string {
+  const preview = payload.uuids.slice(0, UUID_HISTORY_PREVIEW_COUNT).join(' ')
+  const more = payload.count > UUID_HISTORY_PREVIEW_COUNT ? ' …' : ''
+  const namePart = payload.name ? ` · ${payload.name}` : ''
+  const trunc = payload.truncated ? `（已存前${payload.uuids.length}条）` : ''
+  return `${payload.version} × ${payload.count}${namePart} · ${preview}${more}${trunc}`
+}
+
+export function parseUuidHistory(item: { detail?: string; payload?: unknown }): UuidHistoryPayload | null {
+  const p = item.payload
+  if (!p || typeof p !== 'object') return null
+  const rec = p as Partial<UuidHistoryPayload>
+  if (!Array.isArray(rec.uuids) || rec.uuids.length === 0) return null
+  const uuids = rec.uuids.filter((u): u is string => typeof u === 'string')
+  if (uuids.length === 0) return null
+  const version: UuidVersion =
+    rec.version === 'v1' || rec.version === 'v3' || rec.version === 'v4' || rec.version === 'v5' ? rec.version : 'v4'
+  return {
+    version,
+    count: typeof rec.count === 'number' && rec.count > 0 ? rec.count : uuids.length,
+    name: typeof rec.name === 'string' ? rec.name : undefined,
+    namespace: typeof rec.namespace === 'string' ? rec.namespace : undefined,
+    uuids,
+    truncated: rec.truncated === true,
+  }
+}

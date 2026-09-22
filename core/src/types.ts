@@ -40,6 +40,7 @@ export interface HistoryItem {
   action: string
   detail: string
   time: number
+  payload?: unknown
 }
 
 export interface ProgressInfo {
