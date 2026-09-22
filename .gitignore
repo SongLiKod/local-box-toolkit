@@ -1,0 +1,10 @@
+node_modules/
+dist/
+dist-electron/
+dist-unpackage/
+unpackage/
+*.log
+.DS_Store
+.vite/
+coverage/
+web/public/ffmpeg/

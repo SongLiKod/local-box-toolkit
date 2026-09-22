@@ -1,0 +1,36 @@
+{
+  "easycom": {
+    "autoscan": true
+  },
+  "pages": [
+    { "path": "pages/index/index", "style": { "navigationBarTitleText": "LocalBox 本地工具箱" } },
+    { "path": "pages/convert/office", "style": { "navigationBarTitleText": "Office文档互转" } },
+    { "path": "pages/convert/pdf", "style": { "navigationBarTitleText": "PDF工具集" } },
+    { "path": "pages/convert/doc2image", "style": { "navigationBarTitleText": "文档转图片" } },
+    { "path": "pages/convert/image", "style": { "navigationBarTitleText": "图片格式转换" } },
+    { "path": "pages/convert/media", "style": { "navigationBarTitleText": "音视频转换" } },
+    { "path": "pages/dev/uuid", "style": { "navigationBarTitleText": "UUID生成器" } },
+    { "path": "pages/dev/base64", "style": { "navigationBarTitleText": "Base64编解码" } },
+    { "path": "pages/dev/url", "style": { "navigationBarTitleText": "URL编解码" } },
+    { "path": "pages/dev/hash", "style": { "navigationBarTitleText": "哈希计算" } },
+    { "path": "pages/dev/timestamp", "style": { "navigationBarTitleText": "时间戳转换" } },
+    { "path": "pages/dev/password", "style": { "navigationBarTitleText": "随机密码" } },
+    { "path": "pages/dev/barcode", "style": { "navigationBarTitleText": "二维码/条形码" } },
+    { "path": "pages/photo/id", "style": { "navigationBarTitleText": "证件照制作" } },
+    { "path": "pages/photo/edit", "style": { "navigationBarTitleText": "图片编辑" } },
+    { "path": "pages/life/units", "style": { "navigationBarTitleText": "单位换算" } },
+    { "path": "pages/life/time", "style": { "navigationBarTitleText": "时间换算" } },
+    { "path": "pages/life/color", "style": { "navigationBarTitleText": "颜色取色器" } },
+    { "path": "pages/life/rename", "style": { "navigationBarTitleText": "批量重命名" } },
+    { "path": "pages/life/text", "style": { "navigationBarTitleText": "文本处理" } },
+    { "path": "pages/life/exif", "style": { "navigationBarTitleText": "EXIF清除" } },
+    { "path": "pages/history", "style": { "navigationBarTitleText": "操作历史" } },
+    { "path": "pages/settings", "style": { "navigationBarTitleText": "设置" } }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "LocalBox",
+    "navigationBarBackgroundColor": "#F5F7FA",
+    "backgroundColor": "#F5F7FA"
+  }
+}

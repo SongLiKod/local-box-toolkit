@@ -1,0 +1,37 @@
+{
+  "name": "local-box-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LocalBox 本地工具箱 - 三端共用核心逻辑与测试",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck:core": "tsc -p tsconfig.core.json",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "dev:electron": "npm --prefix electron run dev",
+    "build:electron": "npm --prefix electron run dist",
+    "build:mobile": "npm --prefix mobile run build:h5"
+  },
+  "devDependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^20.14.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/uuid": "^9.0.8",
+    "crypto-js": "^4.2.0",
+    "gifenc": "^1.0.3",
+    "html2canvas": "^1.4.1",
+    "jsbarcode": "^3.11.6",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.8.0",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.5.136",
+    "qrcode": "^1.5.3",
+    "typescript": "^5.4.5",
+    "uuid": "^9.0.1",
+    "vitest": "^1.6.0",
+    "xlsx": "^0.18.5"
+  }
+}

@@ -1,0 +1,33 @@
+appId: com.localbox.desktop
+productName: LocalBox
+copyright: LocalBox 本地工具箱
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist-electron/**/*
+  - renderer/**/*
+  - package.json
+  - '!**/*.ts'
+asar: true
+win:
+  target:
+    - nsis
+    - portable
+  icon: build/icon.ico
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  # 可选桌面快捷方式（PRD 4.2）
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: LocalBox
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.developer-tools
+  icon: build/icon.icns
+linux:
+  target:
+    - AppImage

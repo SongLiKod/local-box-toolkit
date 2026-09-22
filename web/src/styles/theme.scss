@@ -1,0 +1,31 @@
+/* 主题 CSS 变量（直接采用 TechDoc 3 / PRD 5 定义色值，:root 挂载，切换即全局生效） */
+
+/* 浅色主题 */
+:root.light {
+  --color-bg-page: #F5F7FA;
+  --color-bg-card: #FFFFFF;
+  --color-text-primary: #1D2129;
+  --color-text-secondary: #6E7681;
+  --color-border: #E5E6EB;
+  --color-primary: #1677FF;
+  --color-primary-light: #E8F3FF;
+  --color-success: #00B42A;
+  --color-warning: #FF7D00;
+  --color-error: #F53F3F;
+  --color-shadow: rgba(0, 0, 0, 0.08);
+}
+
+/* 深色主题 */
+:root.dark {
+  --color-bg-page: #17171A;
+  --color-bg-card: #232324;
+  --color-text-primary: #F2F3F5;
+  --color-text-secondary: #86909C;
+  --color-border: #2E2E30;
+  --color-primary: #4096FF;
+  --color-primary-light: #192945;
+  --color-success: #00C48C;
+  --color-warning: #FF9500;
+  --color-error: #FF4D4F;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+}

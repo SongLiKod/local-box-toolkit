@@ -1,0 +1,94 @@
+@use './theme.scss';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 1200px;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: 'PingFang SC', 'Microsoft YaHei', Inter, 'Helvetica Neue', Arial, sans-serif;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* 通用卡片 */
+.lb-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px var(--color-shadow);
+  padding: 20px;
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+
+.lb-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.lb-desc {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 16px;
+}
+
+.lb-section {
+  margin-bottom: 16px;
+}
+
+.lb-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.lb-output {
+  width: 100%;
+  font-family: Inter, 'Courier New', monospace;
+}
+
+/* 弹窗圆角 12px、按钮 6px、卡片 8px（PRD 5.4） */
+.el-dialog {
+  border-radius: 12px !important;
+}
+.el-button {
+  border-radius: 6px !important;
+}
+.el-card {
+  border-radius: 8px;
+}
+
+/* Element Plus 变量映射到主题色 */
+:root {
+  --el-color-primary: var(--color-primary);
+  --el-bg-color: var(--color-bg-card);
+  --el-bg-color-overlay: var(--color-bg-card);
+  --el-text-color-primary: var(--color-text-primary);
+  --el-text-color-regular: var(--color-text-primary);
+  --el-border-color: var(--color-border);
+  --el-fill-color-blank: var(--color-bg-card);
+}
+
+.lb-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.lb-preview-grid img {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.lb-history-list {
+  max-height: 300px;
+  overflow: auto;
+}

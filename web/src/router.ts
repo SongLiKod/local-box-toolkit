@@ -1,0 +1,34 @@
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
+
+const routes: RouteRecordRaw[] = [
+  { path: '/', name: 'home', component: () => import('./views/Home.vue') },
+  { path: '/history', name: 'history', component: () => import('./views/History.vue') },
+  { path: '/favorites', name: 'favorites', component: () => import('./views/Favorites.vue') },
+  { path: '/settings', name: 'settings', component: () => import('./views/Settings.vue') },
+  { path: '/convert/office', component: () => import('./views/convert/OfficeConvert.vue') },
+  { path: '/convert/pdf', component: () => import('./views/convert/PdfTools.vue') },
+  { path: '/convert/image', component: () => import('./views/convert/Doc2Image.vue') },
+  { path: '/convert/pic', component: () => import('./views/convert/ImageConvert.vue') },
+  { path: '/convert/media', component: () => import('./views/convert/MediaConvert.vue') },
+  { path: '/dev/uuid', component: () => import('./views/dev/Uuid.vue') },
+  { path: '/dev/base64', component: () => import('./views/dev/Base64.vue') },
+  { path: '/dev/url', component: () => import('./views/dev/Url.vue') },
+  { path: '/dev/hash', component: () => import('./views/dev/Hash.vue') },
+  { path: '/dev/timestamp', component: () => import('./views/dev/Timestamp.vue') },
+  { path: '/dev/password', component: () => import('./views/dev/Password.vue') },
+  { path: '/dev/barcode', component: () => import('./views/dev/Barcode.vue') },
+  { path: '/photo/id', component: () => import('./views/photo/IdPhoto.vue') },
+  { path: '/photo/edit', component: () => import('./views/photo/ImageEdit.vue') },
+  { path: '/life/units', component: () => import('./views/life/Units.vue') },
+  { path: '/life/time', component: () => import('./views/life/TimeConvert.vue') },
+  { path: '/life/color', component: () => import('./views/life/Color.vue') },
+  { path: '/life/rename', component: () => import('./views/life/Rename.vue') },
+  { path: '/life/text', component: () => import('./views/life/TextTool.vue') },
+  { path: '/life/exif', component: () => import('./views/life/Exif.vue') },
+  { path: '/:pathMatch(.*)*', redirect: '/' },
+]
+
+export const router = createRouter({
+  history: createWebHashHistory(),
+  routes,
+})
