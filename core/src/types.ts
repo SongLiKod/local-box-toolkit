@@ -55,3 +55,20 @@ export interface ConvertedFile {
   name: string
   blob: Blob
 }
+
+export interface NoteItem {
+  id: string
+  title: string
+  body: string
+  updatedAt: number
+}
+
+export interface LocalBackup {
+  version: 1
+  exportedAt: number
+  themePreference?: ThemePreference
+  favorites?: FavoriteItem[]
+  history?: HistoryItem[]
+  toolParams?: Record<string, unknown>
+  notes?: NoteItem[]
+}

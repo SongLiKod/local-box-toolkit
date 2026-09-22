@@ -17,6 +17,10 @@ const routes: RouteRecordRaw[] = [
   { path: '/dev/timestamp', component: () => import('./views/dev/Timestamp.vue') },
   { path: '/dev/password', component: () => import('./views/dev/Password.vue') },
   { path: '/dev/barcode', component: () => import('./views/dev/Barcode.vue') },
+  { path: '/dev/json', component: () => import('./views/dev/JsonFmt.vue') },
+  { path: '/dev/regex', component: () => import('./views/dev/Regex.vue') },
+  { path: '/dev/jwt', component: () => import('./views/dev/Jwt.vue') },
+  { path: '/dev/radix', component: () => import('./views/dev/Radix.vue') },
   { path: '/photo/id', component: () => import('./views/photo/IdPhoto.vue') },
   { path: '/photo/edit', component: () => import('./views/photo/ImageEdit.vue') },
   { path: '/life/units', component: () => import('./views/life/Units.vue') },
@@ -25,6 +29,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/life/rename', component: () => import('./views/life/Rename.vue') },
   { path: '/life/text', component: () => import('./views/life/TextTool.vue') },
   { path: '/life/exif', component: () => import('./views/life/Exif.vue') },
+  { path: '/life/diff', component: () => import('./views/life/Diff.vue') },
+  { path: '/life/notes', component: () => import('./views/life/Notes.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 

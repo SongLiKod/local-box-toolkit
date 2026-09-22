@@ -78,9 +78,11 @@
     <div class="lb-group">
       <div class="lb-glabel">本地数据</div>
       <div class="lb-row">
+        <el-button size="small" @click="exportBak">导出备份</el-button>
+        <el-button size="small" @click="importBak">导入备份</el-button>
         <el-button size="small" type="danger" @click="clearAll">清空收藏与历史记录</el-button>
       </div>
-      <span class="lb-hint">收藏 {{ favCount }} 项 · 历史 {{ histCount }} 条</span>
+      <span class="lb-hint">收藏 {{ favCount }} 项 · 历史 {{ histCount }} 条 · 备份含主题/收藏/历史/参数/便签</span>
     </div>
 
     <el-alert type="success" :closable="false" show-icon
@@ -99,6 +101,8 @@ import {
   getPresetTokens,
   resolveAppearanceTokens,
   type ResolvedTheme,
+  saveBlob,
+  type LocalBackup,
   type ThemePaletteId,
   type ThemeTokens,
 } from '@localbox/core/index'
@@ -110,8 +114,8 @@ import {
   setCustomTokens,
   resetCustomTheme,
 } from '../composables/useTheme'
-import { favorites, history, loadFavorites, clearHistory, toggleFavorite } from '../composables/useFavorites'
-import { nativeBridge } from '../store/bootstrap'
+import { favorites, history, loadFavorites, loadHistory, clearHistory, toggleFavorite } from '../composables/useFavorites'
+import { nativeBridge, store } from '../store/bootstrap'
 
 const isDesktop = !!nativeBridge
 const storageLabel = computed(() => (isDesktop ? 'AppData JSON 文件' : 'IndexedDB + localStorage'))
@@ -162,6 +166,34 @@ function useCurrentPresetAsCustom(): void {
   const tokens = getPresetTokens(source, editAppearance.value)
   Object.assign(draft, tokens)
   void setCustomTokens(editAppearance.value, tokens)
+}
+
+async function exportBak(): Promise<void> {
+  const bak = await store.exportBackup()
+  const blob = new Blob([JSON.stringify(bak, null, 2)], { type: 'application/json;charset=utf-8' })
+  await saveBlob(`localbox-backup-${Date.now()}.json`, blob)
+  ElMessage.success('已导出本地备份')
+}
+
+async function importBak(): Promise<void> {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = 'application/json,.json'
+  input.onchange = async () => {
+    const file = input.files?.[0]
+    if (!file) return
+    try {
+      const data = JSON.parse(await file.text()) as LocalBackup
+      await ElMessageBox.confirm('导入后与现有数据合并。主题、收藏、历史、参数、便签会写入本机。', '导入备份', { type: 'warning' })
+      await store.importBackup(data, 'merge')
+      await loadFavorites()
+      await loadHistory()
+      ElMessage.success('已导入备份')
+    } catch (e) {
+      ElMessage.error(e instanceof Error ? e.message : '导入失败')
+    }
+  }
+  input.click()
 }
 
 async function clearAll(): Promise<void> {

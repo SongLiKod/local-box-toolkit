@@ -26,6 +26,10 @@ export const TOOLS: ToolMeta[] = [
   { id: 'timestamp', name: '时间戳转换', desc: '时间戳与日期互转', category: 'dev', route: '/pages/dev/timestamp' },
   { id: 'password', name: '随机密码', desc: 'Web Crypto 本地随机', category: 'dev', route: '/pages/dev/password' },
   { id: 'barcode', name: '二维码/条形码', desc: '本地生成', category: 'dev', route: '/pages/dev/barcode' },
+  { id: 'jsonfmt', name: 'JSON格式化', desc: '格式化/压缩/校验', category: 'dev', route: '/pages/dev/json' },
+  { id: 'regex', name: '正则测试', desc: '本地正则匹配', category: 'dev', route: '/pages/dev/regex' },
+  { id: 'jwt', name: 'JWT解析', desc: '本地解码 Token', category: 'dev', route: '/pages/dev/jwt' },
+  { id: 'radix', name: '进制转换', desc: '2~36 进制互转', category: 'dev', route: '/pages/dev/radix' },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', category: 'photo', route: '/pages/photo/id' },
   { id: 'image-edit', name: '图片编辑', desc: '裁剪/旋转/水印/去底色', category: 'photo', route: '/pages/photo/edit' },
   { id: 'units', name: '单位换算', desc: '长度/重量/面积/温度等', category: 'life', route: '/pages/life/units' },
@@ -34,6 +38,8 @@ export const TOOLS: ToolMeta[] = [
   { id: 'rename', name: '批量重命名', desc: '前缀/序号/替换', category: 'life', route: '/pages/life/rename' },
   { id: 'text-tool', name: '文本处理', desc: '去空格/换行/字数统计', category: 'life', route: '/pages/life/text' },
   { id: 'exif', name: '图片EXIF清除', desc: '本地剥离元数据', category: 'life', route: '/pages/life/exif' },
+  { id: 'diff', name: '文本对比', desc: '逐行对比增删', category: 'life', route: '/pages/life/diff' },
+  { id: 'notes', name: '本地便签', desc: '本机保存备忘', category: 'life', route: '/pages/life/notes' },
 ]
 
 export function toolById(id: string): ToolMeta | undefined {
