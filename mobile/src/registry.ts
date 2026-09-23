@@ -30,6 +30,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'regex', name: '正则测试', desc: '本地正则匹配', category: 'dev', route: '/pages/dev/regex' },
   { id: 'jwt', name: 'JWT解析', desc: '本地解码 Token', category: 'dev', route: '/pages/dev/jwt' },
   { id: 'radix', name: '进制转换', desc: '2~36 进制互转', category: 'dev', route: '/pages/dev/radix' },
+  { id: 'ip', name: 'IP地址工具', desc: 'IPv4/IPv6 互转/子网计算', category: 'dev', route: '/pages/dev/ip' },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', category: 'photo', route: '/pages/photo/id' },
   { id: 'image-edit', name: '图片编辑', desc: '裁剪/旋转/水印/去底色', category: 'photo', route: '/pages/photo/edit' },
   { id: 'units', name: '单位换算', desc: '长度/重量/面积/温度等', category: 'life', route: '/pages/life/units' },

@@ -20,6 +20,7 @@
     { "path": "pages/dev/regex", "style": { "navigationBarTitleText": "正则测试" } },
     { "path": "pages/dev/jwt", "style": { "navigationBarTitleText": "JWT解析" } },
     { "path": "pages/dev/radix", "style": { "navigationBarTitleText": "进制转换" } },
+    { "path": "pages/dev/ip", "style": { "navigationBarTitleText": "IP地址工具" } },
     { "path": "pages/photo/id", "style": { "navigationBarTitleText": "证件照制作" } },
     { "path": "pages/photo/edit", "style": { "navigationBarTitleText": "图片编辑" } },
     { "path": "pages/life/units", "style": { "navigationBarTitleText": "单位换算" } },

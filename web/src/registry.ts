@@ -144,6 +144,14 @@ export const TOOLS: ToolMeta[] = [
     keywords: ['进制', '二进制', '十六进制', 'hex'],
   },
   {
+    id: 'ip',
+    name: 'IP地址工具',
+    desc: 'IPv4/IPv6 格式互转、CIDR 子网计算，纯本地',
+    category: 'dev',
+    route: '/dev/ip',
+    keywords: ['ip', 'ipv4', 'ipv6', '子网', 'cidr', '掩码'],
+  },
+  {
     id: 'idphoto',
     name: '证件照制作',
     desc: '人脸检测、智能抠图、白蓝红背景替换、300DPI高清导出',
