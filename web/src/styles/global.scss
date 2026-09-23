@@ -54,6 +54,13 @@ body {
   font-family: Inter, 'Courier New', monospace;
 }
 
+/* 图片放大器：缩略图点开后按视口等比放大，避免小图仍然显示很小 */
+.el-image-viewer__img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* 弹窗圆角 12px、按钮 6px、卡片 8px（PRD 5.4） */
 .el-dialog {
   border-radius: 12px !important;

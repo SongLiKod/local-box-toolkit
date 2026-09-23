@@ -46,6 +46,25 @@ export async function getPageCount(file: File): Promise<number | null> {
   return null // docx/xlsx 本地无法精确预知页数，按文件大小估计
 }
 
+/** 预览缩略图渲染 DPI：需要兼顾网格缩略图与点开放大后的清晰度 */
+export const PREVIEW_DPI = 110
+
+/** 将预览画布限制到最大边长，避免超长页面占用过多内存 */
+function clampPreviewCanvas(canvas: HTMLCanvasElement, maxSize = 1600): HTMLCanvasElement {
+  const longest = Math.max(canvas.width, canvas.height)
+  if (longest <= maxSize) return canvas
+  const scale = maxSize / longest
+  const out = document.createElement('canvas')
+  out.width = Math.max(1, Math.round(canvas.width * scale))
+  out.height = Math.max(1, Math.round(canvas.height * scale))
+  const ctx = out.getContext('2d')
+  if (!ctx) return canvas
+  ctx.drawImage(canvas, 0, 0, out.width, out.height)
+  canvas.width = 0
+  canvas.height = 0
+  return out
+}
+
 /** 转换前预览页面缩略图 */
 export async function previewThumbnails(file: File, maxPages = 20): Promise<string[]> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
@@ -54,8 +73,9 @@ export async function previewThumbnails(file: File, maxPages = 20): Promise<stri
     const { doc, numPages } = await openPdf(file)
     try {
       for (let p = 1; p <= Math.min(numPages, maxPages); p++) {
-        const canvas = await renderPdfPageToCanvas(doc, p, 24, false)
-        urls.push(canvas.toDataURL('image/jpeg', 0.7))
+        const raw = await renderPdfPageToCanvas(doc, p, PREVIEW_DPI, false)
+        const canvas = clampPreviewCanvas(raw)
+        urls.push(canvas.toDataURL('image/jpeg', 0.78))
         canvas.width = 0
         canvas.height = 0
       }
@@ -66,17 +86,19 @@ export async function previewThumbnails(file: File, maxPages = 20): Promise<stri
   }
   if (ext === 'pptx') {
     const parsed = await parsePptx(file)
-    const canvases = await parsed.render(72)
-    for (const c of canvases.slice(0, maxPages)) {
-      urls.push(c.toDataURL('image/jpeg', 0.7))
+    const canvases = await parsed.render(PREVIEW_DPI)
+    for (const raw of canvases.slice(0, maxPages)) {
+      const c = clampPreviewCanvas(raw)
+      urls.push(c.toDataURL('image/jpeg', 0.78))
       c.width = 0
       c.height = 0
     }
     return urls
   }
-  const pages = await documentToCanvases(file, 72, false)
-  for (const c of pages.slice(0, maxPages)) {
-    urls.push(c.toDataURL('image/jpeg', 0.7))
+  const pages = await documentToCanvases(file, PREVIEW_DPI, false)
+  for (const raw of pages.slice(0, maxPages)) {
+    const c = clampPreviewCanvas(raw)
+    urls.push(c.toDataURL('image/jpeg', 0.78))
     c.width = 0
     c.height = 0
   }
