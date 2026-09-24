@@ -1,13 +1,13 @@
 {
   "name": "localbox-web",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "postinstall": "node scripts/copy-ffmpeg.mjs",
     "predev": "node scripts/copy-ffmpeg.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/copy-ffmpeg.mjs",
+    "prebuild": "node scripts/copy-ffmpeg.mjs && node ../scripts/sync-version.mjs",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit"

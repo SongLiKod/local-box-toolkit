@@ -1,4 +1,4 @@
-# LocalBox 本地工具箱 V1.0
+# LocalBox 本地工具箱
 
 纯本地运算的多端工具集合：格式转换、开发工具、证件照、便民工具。
 文件不上传任何服务器，无广告，基础功能无次数/大小限制。
@@ -46,6 +46,19 @@ cd android && gradle assembleDebug        # 或 assembleRelease（需 Android SD
 - Electron：完全离线，本地 JSON 配置存于 AppData（userData），支持系统文件读写、批量重命名落盘。
 - 安卓：最低 Android 9.0（API 28），uni-app H5 产物由仓库内原生 WebView 壳加载（`android/`），
   仅需基础存储权限以外无额外权限；文件经 `AndroidBridge` 保存到系统 Download/LocalBox 目录，本地持久化用 localStorage + IndexedDB。
+
+## 应用内升级（安卓）
+
+设置 → 版本与更新 → 检查更新，启动时也会静默提醒（6 小时节流、同版本只提醒一次）；
+下载与安装全程在应用内完成，不跳转浏览器或文件管理器。
+
+- 升级源默认读 GitHub Releases（`SongLiKod/local-box-toolkit`：tag 版本号 + Release 说明 + `LocalBox-<版本>.apk` 正式包），
+  可在 `mobile/src/utils/upgrade.ts` 通过 `CUSTOM_VERSION_URL` 切换为自定义 `version.json`
+  （`{ "version", "notes", "url", "sha256"? }`，需支持 CORS 的 HTTPS 地址）。
+- 首次升级需在系统设置一次性授权「安装未知应用」（Android 8+ 强制要求，返回后自动继续）；
+  安装时系统会在应用上方弹出确认框（安全策略无法跳过），点「更新」即完成，不离开应用。
+- 升级包必须与已安装版本同一签名：CI 需配置 `ANDROID_KEYSTORE_*` secrets，否则每次构建签名不同、无法覆盖安装。
+- 版本号唯一来源是**根 `package.json` 的 `version`**：Web/Electron/安卓设置页、APK 的 `versionName`/`versionCode`、uni manifest、Electron 安装包版本均构建时自动读取或同步（`npm run version:sync` 可手动同步）；发版时把它改成目标版本、打 `v<同版本号>` tag，CI 会校验 tag 与 package.json 一致（Release 资产由 CI 自动上传）。
 
 ## 主题
 

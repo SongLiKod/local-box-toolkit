@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.DownloadManager
 import android.content.ContentValues
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -16,6 +17,7 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
@@ -29,13 +31,19 @@ import java.util.concurrent.Executors
  * - 通过 https 伪域名加载打包进 assets 的 uni-app H5 产物（ES Module / WebCrypto 安全上下文可用）
  * - window.AndroidBridge.saveBase64：把前端处理结果保存到系统下载目录（Download/LocalBox）
  * - onShowFileChooser：接管页面 <input type="file">，调起系统文件选择器
+ * - window.AndroidBridge.startUpdate：应用内自升级（详见 Updater.kt）
  */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
 
-    /** 文件写盘线程池（与 UI 线程解耦） */
+    /** 文件写盘线程池（与 UI 线程解耦，升级下载复用） */
     private val ioPool = Executors.newSingleThreadExecutor()
+
+    /** 应用内自升级：静默下载 + PackageInstaller 系统确认安装 */
+    private val updater by lazy {
+        Updater(this, ioPool) { event, data -> emitUpdateEvent(event, data) }
+    }
 
     /** 文件选择回调（供 <input type="file"> 导入文件使用） */
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
@@ -110,6 +118,26 @@ class MainActivity : AppCompatActivity() {
                         "'','${escapeJs("无法打开下载目录：" + (e.message ?: "请手动打开文件管理器"))}')"
                 )
             }
+        }
+
+        /** 当前版本号（versionName），升级检查用于版本对比 */
+        @JavascriptInterface
+        fun getVersion(): String = try {
+            this@MainActivity.packageManager.getPackageInfo(this@MainActivity.packageName, 0)
+                .versionName ?: "0.0.0"
+        } catch (e: Exception) {
+            Log.w("LocalBox", "getVersion failed", e)
+            "0.0.0"
+        }
+
+        /** 是否已获「安装未知应用」授权（Android 8+ 安装 APK 的前置条件） */
+        @JavascriptInterface
+        fun canInstall(): Boolean = updater.canInstall()
+
+        /** 发起应用内升级：原生静默下载并唤起系统安装确认，结果经 __localboxUpdateEvent 回调 */
+        @JavascriptInterface
+        fun startUpdate(url: String?, sha256: String?) {
+            updater.startUpdate(url ?: "", sha256 ?: "")
         }
     }
 
@@ -189,6 +217,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /** 升级事件推送页面：window.__localboxUpdateEvent({event,data}) */
+    private fun emitUpdateEvent(event: String, data: Any?) {
+        val json = JSONObject().put("event", event).put("data", data ?: JSONObject.NULL).toString()
+        evaluateJs("window.__localboxUpdateEvent && window.__localboxUpdateEvent($json)")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -245,10 +279,25 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.addJavascriptInterface(NativeBridge(), "AndroidBridge")
+
+        // 升级安装结果广播：动态注册、非导出（targetSdk 34 要求显式声明导出方向；
+        // PendingIntent 以本应用身份发送，非导出即可收到）
+        ContextCompat.registerReceiver(
+            this,
+            updater.installReceiver,
+            IntentFilter(Updater.ACTION_INSTALL_RESULT),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
         webView.loadUrl("https://appassets.androidplatform.net/assets/dist/index.html")
     }
 
     override fun onDestroy() {
+        try {
+            unregisterReceiver(updater.installReceiver)
+        } catch (e: Exception) {
+            Log.w("LocalBox", "unregister install receiver failed", e)
+        }
         ioPool.shutdownNow()
         super.onDestroy()
     }
@@ -260,6 +309,10 @@ class MainActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == Updater.REQUEST_INSTALL_PERMISSION) {
+            updater.onPermissionResult()
+            return
+        }
         if (requestCode == fileChooserRequestCode) {
             val result =
                 if (resultCode == Activity.RESULT_OK && data != null)

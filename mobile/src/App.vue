@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onLaunch } from '@dcloudio/uni-app'
 import { initTheme } from './composables/useTheme'
+import { autoCheckUpgrade } from './utils/upgrade'
 
 onLaunch(() => {
   void initTheme()
+  // 应用内升级：启动稍后静默检查（仅安卓壳内生效，6 小时节流、失败静默、同版本只提醒一次）
+  setTimeout(() => void autoCheckUpgrade(), 1500)
 })
 </script>
 

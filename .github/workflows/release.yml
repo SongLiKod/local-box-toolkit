@@ -160,6 +160,9 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -181,6 +184,16 @@ jobs:
           echo "name=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
           echo "prerelease=$PRE" >> "$GITHUB_OUTPUT"
+
+      # 版本号唯一来源 = 根 package.json：tag 与它不一致直接失败，防止各端版本错位
+      - name: Verify tag matches root package.json version
+        run: |
+          TAG_VERSION="${{ steps.tag.outputs.version }}"
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::发布 tag (v$TAG_VERSION) 与根 package.json version ($PKG_VERSION) 不一致。版本号唯一来源是根 package.json，请改它后打同号 tag 重发。"
+            exit 1
+          fi
 
       - name: Prepare release files
         run: |

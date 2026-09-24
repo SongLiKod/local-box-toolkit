@@ -76,6 +76,12 @@
     </div>
 
     <div class="lb-group">
+      <div class="lb-glabel">版本信息</div>
+      <el-tag size="small">LocalBox v{{ appVersion }}</el-tag>
+      <span class="lb-hint">与 Electron、安卓端及应用内升级检查同源</span>
+    </div>
+
+    <div class="lb-group">
       <div class="lb-glabel">本地数据</div>
       <div class="lb-row">
         <el-button size="small" @click="exportBak">导出备份</el-button>
@@ -116,7 +122,10 @@ import {
 } from '../composables/useTheme'
 import { favorites, history, loadFavorites, loadHistory, clearHistory, toggleFavorite } from '../composables/useFavorites'
 import { nativeBridge, store } from '../store/bootstrap'
+// 版本号唯一来源 = 仓库根 package.json（构建时内联为字符串，各端一致）
+import rootPkg from '../../../package.json'
 
+const appVersion: string = rootPkg.version
 const isDesktop = !!nativeBridge
 const storageLabel = computed(() => (isDesktop ? 'AppData JSON 文件' : 'IndexedDB + localStorage'))
 const favCount = computed(() => favorites.value.size)
