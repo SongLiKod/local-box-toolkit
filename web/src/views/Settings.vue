@@ -172,7 +172,7 @@ import {
   setCustomTokens,
   resetCustomTheme,
 } from '../composables/useTheme'
-import { favorites, history, loadFavorites, loadHistory, clearHistory, toggleFavorite } from '../composables/useFavorites'
+import { favorites, history, loadFavorites, loadHistory, clearHistory, clearFavorites } from '../composables/useFavorites'
 import { nativeBridge, store } from '../store/bootstrap'
 // 版本号唯一来源 = 仓库根 package.json（构建时内联为字符串，各端一致）
 import rootPkg from '../../../package.json'
@@ -260,8 +260,7 @@ async function importBak(): Promise<void> {
 async function clearAll(): Promise<void> {
   await ElMessageBox.confirm('将清空收藏、历史记录，是否继续？', '确认', { type: 'warning' })
   await clearHistory()
-  for (const id of [...favorites.value]) await toggleFavorite(id)
-  await loadFavorites()
+  await clearFavorites()
   ElMessage.success('已清空本地数据')
 }
 

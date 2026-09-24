@@ -47,3 +47,8 @@ export async function clearHistory(): Promise<void> {
   await store.clearHistory()
   history.value = []
 }
+
+export async function clearFavorites(): Promise<void> {
+  await store.clearFavorites()
+  favorites.value = new Set()
+}

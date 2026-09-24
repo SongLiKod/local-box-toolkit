@@ -6,65 +6,97 @@
         <view class="lb-hero-title">LocalBox 本地工具箱</view>
       </view>
       <view class="lb-desc lb-hero-desc">全部运算本地执行 · 文件不上传 · 无广告 · 基础功能无次数限制</view>
+      <input
+        v-model="kw"
+        class="lb-input lb-search"
+        placeholder="搜索工具（离线本地）"
+        confirm-type="search"
+      />
     </view>
 
-    <view v-for="cat in CATEGORIES" :key="cat.id" class="lb-card">
-      <view class="lb-cat lb-cat-head" @click="toggle(cat.id)">
-        <text class="lb-cat-icon">{{ cat.icon }}</text>
-        <text>{{ cat.name }}</text>
-        <text class="lb-cat-count">{{ toolsOf(cat.id).length }} 个工具</text>
-        <text class="lb-chev" :class="{ closed: isClosed(cat.id) }">▾</text>
-      </view>
-      <template v-if="!isClosed(cat.id)">
-        <view v-for="t in toolsOf(cat.id)" :key="t.id" class="lb-item" @click="go(t.route)">
+    <!-- 搜索中：平铺结果，隐藏分类折叠 -->
+    <template v-if="searching">
+      <view class="lb-card">
+        <view class="lb-cat lb-cat-head">
+          <text class="lb-cat-icon">🔍</text>
+          <text>搜索结果</text>
+          <text class="lb-cat-count">{{ results.length }} 个工具</text>
+        </view>
+        <view v-for="t in results" :key="t.id" class="lb-item" @click="go(t.route)">
           <text class="lb-item-icon">{{ t.icon }}</text>
           <view class="lb-item-main">
             <view class="lb-item-name">{{ t.name }}</view>
             <view class="lb-item-desc">{{ t.desc }}</view>
           </view>
         </view>
-      </template>
-    </view>
-
-    <view class="lb-card">
-      <view class="lb-cat lb-cat-head" @click="toggle('other')">
-        <text class="lb-cat-icon">📋</text>
-        <text>其他</text>
-        <text class="lb-cat-count">3 项</text>
-        <text class="lb-chev" :class="{ closed: isClosed('other') }">▾</text>
+        <view v-if="!results.length" class="lb-empty">没有匹配的工具，换个关键词试试</view>
       </view>
-      <template v-if="!isClosed('other')">
-        <view class="lb-item" @click="go('/pages/favorites')">
-          <text class="lb-item-icon">⭐</text>
-          <view class="lb-item-main">
-            <view class="lb-item-name">我的收藏</view>
-            <view class="lb-item-desc">收藏的工具直达</view>
-          </view>
+    </template>
+
+    <template v-else>
+      <view v-for="cat in CATEGORIES" :key="cat.id" class="lb-card">
+        <view class="lb-cat lb-cat-head" @click="toggle(cat.id)">
+          <text class="lb-cat-icon">{{ cat.icon }}</text>
+          <text>{{ cat.name }}</text>
+          <text class="lb-cat-count">{{ toolsOf(cat.id).length }} 个工具</text>
+          <text class="lb-chev" :class="{ closed: isClosed(cat.id) }">▾</text>
         </view>
-        <view class="lb-item" @click="go('/pages/history')">
-          <text class="lb-item-icon">🕘</text>
-          <view class="lb-item-main">
-            <view class="lb-item-name">操作历史</view>
-            <view class="lb-item-desc">查看本机操作记录</view>
+        <template v-if="!isClosed(cat.id)">
+          <view v-for="t in toolsOf(cat.id)" :key="t.id" class="lb-item" @click="go(t.route)">
+            <text class="lb-item-icon">{{ t.icon }}</text>
+            <view class="lb-item-main">
+              <view class="lb-item-name">{{ t.name }}</view>
+              <view class="lb-item-desc">{{ t.desc }}</view>
+            </view>
           </view>
+        </template>
+      </view>
+
+      <view class="lb-card">
+        <view class="lb-cat lb-cat-head" @click="toggle('other')">
+          <text class="lb-cat-icon">📋</text>
+          <text>其他</text>
+          <text class="lb-cat-count">3 项</text>
+          <text class="lb-chev" :class="{ closed: isClosed('other') }">▾</text>
         </view>
-        <view class="lb-item" @click="go('/pages/settings')">
-          <text class="lb-item-icon">⚙️</text>
-          <view class="lb-item-main">
-            <view class="lb-item-name">设置</view>
-            <view class="lb-item-desc">外观主题与本地数据</view>
+        <template v-if="!isClosed('other')">
+          <view class="lb-item" @click="go('/pages/favorites')">
+            <text class="lb-item-icon">⭐</text>
+            <view class="lb-item-main">
+              <view class="lb-item-name">我的收藏</view>
+              <view class="lb-item-desc">收藏的工具直达</view>
+            </view>
           </view>
-        </view>
-      </template>
-    </view>
+          <view class="lb-item" @click="go('/pages/history')">
+            <text class="lb-item-icon">🕘</text>
+            <view class="lb-item-main">
+              <view class="lb-item-name">操作历史</view>
+              <view class="lb-item-desc">查看本机操作记录</view>
+            </view>
+          </view>
+          <view class="lb-item" @click="go('/pages/settings')">
+            <text class="lb-item-icon">⚙️</text>
+            <view class="lb-item-main">
+              <view class="lb-item-name">设置</view>
+              <view class="lb-item-desc">外观主题与本地数据</view>
+            </view>
+          </view>
+        </template>
+      </view>
+    </template>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { CATEGORIES, TOOLS, type ToolMeta } from '../../registry'
+import { computed, ref } from 'vue'
+import { CATEGORIES, TOOLS, searchTools, type ToolMeta } from '../../registry'
 import { themeClass, themeStyle } from '../../composables/useTheme'
 import logoUrl from '../../assets/logo.png'
+
+/** 首页搜索（与 Web 顶栏搜索同源：名称/描述/关键词，纯本地匹配） */
+const kw = ref('')
+const searching = computed(() => kw.value.trim().length > 0)
+const results = computed<ToolMeta[]>(() => (searching.value ? searchTools(kw.value) : []))
 
 const COLLAPSE_KEY = 'localbox:collapse'
 
@@ -120,6 +152,15 @@ function go(route: string): void {
 }
 .lb-hero-desc {
   margin-bottom: 0;
+}
+.lb-search {
+  margin-top: 16rpx;
+}
+.lb-empty {
+  text-align: center;
+  margin: 8rpx 0 0;
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
 }
 .lb-cat {
   display: flex;

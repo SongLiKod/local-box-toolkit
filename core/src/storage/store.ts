@@ -69,6 +69,11 @@ export class LocalStore {
     return true
   }
 
+  /** 清空全部收藏（设置页「清空收藏」；与逐条 toggle 等价但一次写入） */
+  async clearFavorites(): Promise<void> {
+    await this.adapter.set(KEY_FAV, [])
+  }
+
   async getHistory(): Promise<HistoryItem[]> {
     return (await this.adapter.get<HistoryItem[]>(KEY_HIST)) ?? []
   }
