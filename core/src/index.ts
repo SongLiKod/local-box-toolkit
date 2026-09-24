@@ -19,6 +19,15 @@ export type { JsonFormatResult } from './devtools/jsonfmt'
 export type { RegexMatch, RegexTestResult } from './devtools/regex'
 export type { JwtDecodeResult, JwtPart } from './devtools/jwt'
 export type { DiffLine, DiffKind } from './tools/diff'
+export type {
+  CronFieldKey,
+  CronFieldDef,
+  CronField,
+  CronParsed,
+  CronFieldSpec,
+  CronSpec,
+  CronPreset,
+} from './devtools/cron'
 export type { SubnetInfo, Ipv4FullInfo, Ipv6FullInfo, Ipv4Parts } from './tools/ip'
 export * from './storage/adapter'
 export * from './storage/store'
@@ -46,6 +55,7 @@ export * as jwtTools from './devtools/jwt'
 export * as radixTools from './devtools/radix'
 export * as diffTools from './tools/diff'
 export * as ipTools from './tools/ip'
+export * as cronTools from './devtools/cron'
 
 export * as docxTools from './convert/docx'
 export * as xlsxTools from './convert/xlsx'

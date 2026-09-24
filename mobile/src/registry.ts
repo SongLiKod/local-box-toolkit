@@ -32,6 +32,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'jwt', name: 'JWT解析', desc: '本地解码 Token', icon: '🎟️', category: 'dev', route: '/pages/dev/jwt' },
   { id: 'radix', name: '进制转换', desc: '2~36 进制互转', icon: '🔢', category: 'dev', route: '/pages/dev/radix' },
   { id: 'ip', name: 'IP地址工具', desc: 'IPv4/IPv6 互转/子网计算', icon: '🌐', category: 'dev', route: '/pages/dev/ip' },
+  { id: 'cron', name: 'Cron表达式', desc: '生成/解析与下次执行时间', icon: '🗓️', category: 'dev', route: '/pages/dev/cron' },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', icon: '🪪', category: 'photo', route: '/pages/photo/id' },
   { id: 'image-edit', name: '图片编辑', desc: '裁剪/缩放/旋转/水印/去底色', icon: '✏️', category: 'photo', route: '/pages/photo/edit' },
   { id: 'units', name: '单位换算', desc: '长度/面积/重量/温度互转', icon: '📏', category: 'life', route: '/pages/life/units' },

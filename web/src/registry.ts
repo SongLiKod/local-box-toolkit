@@ -152,6 +152,14 @@ export const TOOLS: ToolMeta[] = [
     keywords: ['ip', 'ipv4', 'ipv6', '子网', 'cidr', '掩码'],
   },
   {
+    id: 'cron',
+    name: 'Cron表达式',
+    desc: 'Cron 表达式生成与解析，中文语义、字段明细与下次执行时间',
+    category: 'dev',
+    route: '/dev/cron',
+    keywords: ['cron', '表达式', '定时', '计划任务', 'quartz', 'crontab'],
+  },
+  {
     id: 'idphoto',
     name: '证件照制作',
     desc: '人脸检测、智能抠图、白蓝红背景替换、300DPI高清导出',
