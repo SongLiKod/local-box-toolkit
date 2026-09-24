@@ -1,12 +1,12 @@
 {
   "name": "localbox-mobile",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "description": "LocalBox 安卓APP（uni-app Vue3）",
   "scripts": {
     "predev:h5": "node scripts/copy-ffmpeg.mjs",
     "dev:h5": "uni",
-    "prebuild:h5": "node scripts/copy-ffmpeg.mjs",
+    "prebuild:h5": "node scripts/copy-ffmpeg.mjs && node ../scripts/sync-version.mjs",
     "build:h5": "uni build",
     "dev:app": "uni -p app",
     "build:app": "uni build -p app",

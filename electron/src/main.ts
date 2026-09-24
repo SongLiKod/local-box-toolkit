@@ -110,6 +110,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle('shell:open', async (_e, p: string) => shell.openPath(p))
 
+  // 用系统浏览器打开外部地址（Release 页面等）；仅放行 http/https
+  ipcMain.handle('shell:external', (_e, url: string) => {
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) void shell.openExternal(url)
+  })
+
   createWindow()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

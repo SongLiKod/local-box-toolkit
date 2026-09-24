@@ -3,6 +3,18 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// 版本号唯一来源 = 仓库根 package.json（Web/Electron/安卓设置页与应用内升级检查均以它为准）：
+//   versionName 直接取 version；versionCode = 主*10000 + 次*100 + 修订（与 scripts/sync-version.mjs 同公式）
+def rootPkgFile = file('../../package.json')
+def rootPkg = new groovy.json.JsonSlurper().parse(rootPkgFile)
+def verName = rootPkg.version?.toString()
+if (!verName) {
+    throw new GradleException("根 package.json 缺少 version 字段：${rootPkgFile}")
+}
+def verNums = verName.tokenize('.').collect { (it.replaceAll(/[^0-9]/, '') ?: '0') as int }
+while (verNums.size() < 3) verNums.add(0)
+def verCode = verNums[0] * 10000 + verNums[1] * 100 + verNums[2]
+
 android {
     namespace 'com.localbox.app'
     compileSdk 34
@@ -11,8 +23,8 @@ android {
         applicationId "com.localbox.app"
         minSdk 28
         targetSdk 34
-        versionCode 100
-        versionName "1.0.0"
+        versionCode verCode
+        versionName verName
     }
 
     buildTypes {

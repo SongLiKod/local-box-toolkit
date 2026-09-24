@@ -22,6 +22,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/dev/jwt', component: () => import('./views/dev/Jwt.vue') },
   { path: '/dev/radix', component: () => import('./views/dev/Radix.vue') },
   { path: '/dev/ip', component: () => import('./views/dev/Ip.vue') },
+  { path: '/dev/cron', component: () => import('./views/dev/Cron.vue') },
   { path: '/photo/id', component: () => import('./views/photo/IdPhoto.vue') },
   { path: '/photo/edit', component: () => import('./views/photo/ImageEdit.vue') },
   { path: '/life/units', component: () => import('./views/life/Units.vue') },

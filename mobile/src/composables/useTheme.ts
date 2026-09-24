@@ -31,6 +31,8 @@ watchSystemTheme((t) => {
 
 export const themeMode = computed(() => state.mode)
 export const themePalette = computed(() => state.palette)
+/** 自定义配色（浅色/深色各自的覆盖色值），设置页编辑器读写用 */
+export const customColors = computed(() => state.custom)
 export const resolvedTheme = computed<ResolvedTheme>(() =>
   state.mode === 'system' ? state.system : resolveTheme(state.mode),
 )
@@ -112,5 +114,12 @@ export async function setCustomTokens(appearance: ResolvedTheme, patch: Partial<
     },
   }
   state.palette = 'custom'
+  await persist()
+}
+
+/** 清空自定义色值并回到默认「晴空蓝」（与 Web 设置「恢复默认」一致） */
+export async function resetCustomTheme(): Promise<void> {
+  state.custom = {}
+  state.palette = 'azure'
   await persist()
 }

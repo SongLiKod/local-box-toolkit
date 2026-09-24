@@ -39,6 +39,18 @@ describe('本地持久化仓库', () => {
     expect(await s.getFavorites()).toHaveLength(0)
   })
 
+  it('清空收藏', async () => {
+    const s = mk()
+    await s.toggleFavorite('uuid')
+    await s.toggleFavorite('hash')
+    await s.addHistory({ toolId: 't', toolName: 'T', action: 'a', detail: 'd' })
+    await s.clearFavorites()
+    expect(await s.getFavorites()).toEqual([])
+    // 只清收藏，不动历史与主题
+    expect(await s.getHistory()).toHaveLength(1)
+    expect(await s.getThemeMode()).toBe('light')
+  })
+
   it('历史记录最新在前且封顶500', async () => {
     const s = mk()
     for (let i = 0; i < 5; i++) {

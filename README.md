@@ -1,4 +1,4 @@
-# LocalBox 本地工具箱 V1.0
+# LocalBox 本地工具箱
 
 纯本地运算的多端工具集合：格式转换、开发工具、证件照、便民工具。
 文件不上传任何服务器，无广告，基础功能无次数/大小限制。
@@ -46,6 +46,29 @@ cd android && gradle assembleDebug        # 或 assembleRelease（需 Android SD
 - Electron：完全离线，本地 JSON 配置存于 AppData（userData），支持系统文件读写、批量重命名落盘。
 - 安卓：最低 Android 9.0（API 28），uni-app H5 产物由仓库内原生 WebView 壳加载（`android/`），
   仅需基础存储权限以外无额外权限；文件经 `AndroidBridge` 保存到系统 Download/LocalBox 目录，本地持久化用 localStorage + IndexedDB。
+
+## 版本检查与升级
+
+三端「设置」页都有**检查更新**按钮，检查逻辑统一在 `core/src/update.ts`（GitHub Releases 或自定义 `version.json`，版本比较 / 资产挑选 / 说明与时间格式化三端复用）：
+
+- GitHub 源走 `/releases` 列表接口取首个非草稿，**正式版与 pre-release（beta）都能查到**（`/releases/latest` 只返回正式版，会漏掉 beta）；
+  版本比较按 semver 规则处理 `-beta` 等后缀（`2.0.1-beta > 2.0.0`、`2.0.0 > 2.0.0-beta`）。
+- 发布 tag 只用于 Release 显示与资产命名，可能与包内 `versionName` 不同号，因此安卓端安装成功后会记录已装的发布版本（`localbox:upgrade-installed`），避免同一发布反复提醒。
+
+- **Web / Electron**：设置 → 版本信息 → 检查更新，内联展示已最新或新版本（版本号、发布日期、更新说明、检查时间）；
+  有新版时可「打开发布页」「下载安装包」（桌面端挑 Setup 安装包、网页端挑正式 APK），
+  Electron 经系统浏览器打开外链，网页端开新标签页。
+- **安卓（应用内升级）**：设置 → 版本与更新 → 检查更新，启动时也会静默提醒（6 小时节流、同版本只提醒一次）；
+  检查结果内联展示更新说明与发布日期，点「立即升级」后下载进度条与状态实时可见，
+  下载与安装全程在应用内完成，不跳转浏览器或文件管理器。
+
+- 升级源默认读 GitHub Releases（`SongLiKod/local-box-toolkit`：tag 版本号 + Release 说明 + `LocalBox-<版本>.apk` 正式包），
+  可在 `mobile/src/utils/upgrade.ts` 通过 `CUSTOM_VERSION_URL` 切换为自定义 `version.json`
+  （`{ "version", "notes", "url", "sha256"? }`，需支持 CORS 的 HTTPS 地址）。
+- 首次升级需在系统设置一次性授权「安装未知应用」（Android 8+ 强制要求，返回后自动继续）；
+  安装时系统会在应用上方弹出确认框（安全策略无法跳过），点「更新」即完成，不离开应用。
+- 升级包必须与已安装版本同一签名：CI 需配置 `ANDROID_KEYSTORE_*` secrets，否则每次构建签名不同、无法覆盖安装。
+- 版本号唯一来源是**根 `package.json` 的 `version`**：Web/Electron/安卓设置页、APK 的 `versionName`/`versionCode`、uni manifest、Electron 安装包版本均构建时自动读取或同步（`npm run version:sync` 可手动同步）；发布 tag（如 `v2.0.0-beta`）只用于 GitHub Release 的显示与资产命名，**不要求与 package.json 一致**（Release 资产由 CI 自动上传）。
 
 ## 主题
 

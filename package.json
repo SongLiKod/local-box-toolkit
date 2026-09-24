@@ -1,11 +1,12 @@
 {
   "name": "local-box-toolkit",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "LocalBox 本地工具箱 - 三端共用核心逻辑与测试",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
+    "version:sync": "node scripts/sync-version.mjs",
     "typecheck:core": "tsc -p tsconfig.core.json",
     "dev:web": "npm --prefix web run dev",
     "build:web": "npm --prefix web run build",

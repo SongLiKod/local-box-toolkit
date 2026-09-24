@@ -76,6 +76,62 @@
     </div>
 
     <div class="lb-group">
+      <div class="lb-glabel">版本信息</div>
+      <div class="lb-row">
+        <el-tag size="small">LocalBox v{{ appVersion }}</el-tag>
+        <el-button size="small" type="primary" :loading="checking" @click="checkUpdate">
+          检查更新
+        </el-button>
+        <span class="lb-hint">与 Electron、安卓端及应用内升级检查同源</span>
+      </div>
+
+      <el-alert
+        v-if="updateError"
+        class="lb-update-alert"
+        type="error"
+        :closable="false"
+        show-icon
+        :title="updateError"
+      />
+
+      <el-alert
+        v-else-if="updateResult && !updateResult.hasUpdate"
+        class="lb-update-alert"
+        type="success"
+        :closable="false"
+        show-icon
+        :title="upToDateTitle"
+        :description="`检查于 ${lastCheckedLabel}`"
+      />
+
+      <div v-else-if="updateResult" class="lb-update">
+        <el-alert
+          class="lb-update-alert"
+          type="warning"
+          :closable="false"
+          show-icon
+          :title="`发现新版本 v${updateResult.release.version}（当前 v${updateResult.current}）`"
+          :description="updateReleaseMeta"
+        />
+        <div class="lb-notes">
+          <div v-for="(line, i) in updateNotes" :key="i" class="lb-note-line">{{ line }}</div>
+          <div v-if="!updateNotes.length" class="lb-note-line">本次更新未提供更新说明。</div>
+        </div>
+        <div class="lb-row">
+          <el-button size="small" type="primary" @click="openReleasePage">打开发布页</el-button>
+          <el-button v-if="updateAsset" size="small" @click="downloadUpdateAsset">
+            下载 {{ updateAsset.name }}{{ assetSizeLabel }}
+          </el-button>
+        </div>
+        <p class="lb-hint-block">
+          {{ isDesktop
+            ? '桌面端：下载安装包后覆盖安装即可；配置与数据保留在 AppData。'
+            : '网页端可在发布页下载安装包；安卓 App 内可在「设置 → 版本与更新」一键应用内升级。' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="lb-group">
       <div class="lb-glabel">本地数据</div>
       <div class="lb-row">
         <el-button size="small" @click="exportBak">导出备份</el-button>
@@ -102,9 +158,11 @@ import {
   resolveAppearanceTokens,
   type ResolvedTheme,
   saveBlob,
+  updateTools,
   type LocalBackup,
   type ThemePaletteId,
   type ThemeTokens,
+  type UpdateCheck,
 } from '@localbox/core/index'
 import {
   resolvedTheme,
@@ -114,9 +172,12 @@ import {
   setCustomTokens,
   resetCustomTheme,
 } from '../composables/useTheme'
-import { favorites, history, loadFavorites, loadHistory, clearHistory, toggleFavorite } from '../composables/useFavorites'
+import { favorites, history, loadFavorites, loadHistory, clearHistory, clearFavorites } from '../composables/useFavorites'
 import { nativeBridge, store } from '../store/bootstrap'
+// 版本号唯一来源 = 仓库根 package.json（构建时内联为字符串，各端一致）
+import rootPkg from '../../../package.json'
 
+const appVersion: string = rootPkg.version
 const isDesktop = !!nativeBridge
 const storageLabel = computed(() => (isDesktop ? 'AppData JSON 文件' : 'IndexedDB + localStorage'))
 const favCount = computed(() => favorites.value.size)
@@ -199,9 +260,84 @@ async function importBak(): Promise<void> {
 async function clearAll(): Promise<void> {
   await ElMessageBox.confirm('将清空收藏、历史记录，是否继续？', '确认', { type: 'warning' })
   await clearHistory()
-  for (const id of [...favorites.value]) await toggleFavorite(id)
-  await loadFavorites()
+  await clearFavorites()
   ElMessage.success('已清空本地数据')
+}
+
+/* ---------- 版本检查（core/update，与移动端同源） ---------- */
+const checking = ref(false)
+const updateResult = ref<UpdateCheck | null>(null)
+const updateError = ref('')
+
+const lastCheckedLabel = computed(() =>
+  updateResult.value ? updateTools.formatReleaseTime(new Date(updateResult.value.checkedAt).toISOString()) : ''
+)
+const upToDateTitle = computed(() => {
+  const r = updateResult.value
+  if (!r) return ''
+  // tag 与包内版本号可能不同号：装完这一版（alreadyInstalled）要说清是「已安装」而非版本相等
+  return r.alreadyInstalled
+    ? `已安装最新发布 v${r.release.version}（当前包版本 v${r.current}）`
+    : `已是最新版本（当前 v${r.current}，最新 v${r.release.version}）`
+})
+const updateReleaseMeta = computed(() => {
+  const release = updateResult.value?.release
+  if (!release) return ''
+  const parts: string[] = []
+  if (release.publishedAt) parts.push(`发布于 ${updateTools.formatReleaseTime(release.publishedAt)}`)
+  if (release.prerelease) parts.push('预发布版本')
+  if (lastCheckedLabel.value) parts.push(`检查于 ${lastCheckedLabel.value}`)
+  return parts.join(' · ')
+})
+const updateNotes = computed(() =>
+  updateResult.value ? updateTools.releaseNotesLines(updateResult.value.release.notes) : []
+)
+const updateAsset = computed(() =>
+  updateResult.value ? updateTools.pickAsset(updateResult.value.release, isDesktop ? 'desktop' : 'apk') : null
+)
+const assetSizeLabel = computed(() =>
+  updateAsset.value?.size ? `（${updateTools.formatSize(updateAsset.value.size)}）` : ''
+)
+
+async function checkUpdate(): Promise<void> {
+  if (checking.value) return
+  checking.value = true
+  updateError.value = ''
+  try {
+    updateResult.value = await updateTools.checkUpdate(appVersion)
+    if (!updateResult.value.hasUpdate) {
+      ElMessage.success(
+        updateResult.value.alreadyInstalled
+          ? `已安装最新发布 v${updateResult.value.release.version}`
+          : '已是最新版本'
+      )
+    }
+  } catch (e) {
+    updateResult.value = null
+    updateError.value = `检查更新失败：${e instanceof Error ? e.message : String(e)}`
+  } finally {
+    checking.value = false
+  }
+}
+
+/** 外链统一出口：Electron 走系统浏览器，Web 开新标签页 */
+async function openUrl(url: string): Promise<void> {
+  if (!/^https?:\/\//i.test(url)) return
+  if (nativeBridge?.openExternal) {
+    await nativeBridge.openExternal(url)
+    return
+  }
+  window.open(url, '_blank', 'noopener')
+}
+
+function openReleasePage(): void {
+  const url = updateResult.value?.release.htmlUrl
+  if (url) void openUrl(url)
+}
+
+function downloadUpdateAsset(): void {
+  const url = updateAsset.value?.url
+  if (url) void openUrl(url)
 }
 </script>
 
@@ -281,5 +417,29 @@ async function clearAll(): Promise<void> {
   align-items: center;
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+.lb-update-alert {
+  margin-top: 10px;
+}
+.lb-update {
+  margin-top: 2px;
+}
+.lb-notes {
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-page);
+}
+.lb-note-line {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+.lb-update .lb-row {
+  margin-top: 10px;
 }
 </style>
