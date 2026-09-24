@@ -93,6 +93,8 @@ export async function checkForUpdate(current?: string): Promise<UpgradeInfo | nu
   const res = await updateTools.checkUpdate(cur, {
     repo: GITHUB_REPO,
     ...(CUSTOM_VERSION_URL ? { customUrl: CUSTOM_VERSION_URL } : {}),
+    // 发布 tag 不等于包内版本号：装过这一版就不再提醒
+    installedRelease: String(uni.getStorageSync(INSTALLED_KEY) || ''),
   })
   if (!res.hasUpdate) return null
   return toUpgradeInfo(res.release)
@@ -114,6 +116,9 @@ export function openExternalUrl(url: string): void {
 
 // 是否有升级流程进行中（防止启动提醒与设置页并发触发）
 let running = false
+
+/** 本机已安装过的发布版本（Release tag 去 v）：tag 与包内 versionName 解耦后靠它去重 */
+const INSTALLED_KEY = 'localbox:upgrade-installed'
 
 /**
  * 执行升级（仅安卓壳内；浏览器返回 unsupported）。终态 resolve、不抛异常。
@@ -147,6 +152,14 @@ export function runUpgrade(
       running = false
       window.__localboxUpdateEvent = undefined
       uni.hideLoading()
+      // 安装成功即记下这一版：包内 versionName 不随 tag 变，避免下次检查又提示同一版
+      if (outcome === 'success') {
+        try {
+          uni.setStorageSync(INSTALLED_KEY, info.version)
+        } catch {
+          /* 存储失败不影响升级结果 */
+        }
+      }
       onStatus?.(message)
       resolve({ outcome, message })
     }

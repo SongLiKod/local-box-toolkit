@@ -34,6 +34,7 @@ export type {
   UpdateRelease,
   UpdateCheck,
   UpdateFetchOptions,
+  UpdateCheckOptions,
 } from './update'
 export * from './storage/adapter'
 export * from './storage/store'

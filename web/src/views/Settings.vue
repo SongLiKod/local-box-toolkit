@@ -100,7 +100,7 @@
         type="success"
         :closable="false"
         show-icon
-        :title="`已是最新版本（当前 v${updateResult.current}，最新 v${updateResult.release.version}）`"
+        :title="upToDateTitle"
         :description="`检查于 ${lastCheckedLabel}`"
       />
 
@@ -273,6 +273,14 @@ const updateError = ref('')
 const lastCheckedLabel = computed(() =>
   updateResult.value ? updateTools.formatReleaseTime(new Date(updateResult.value.checkedAt).toISOString()) : ''
 )
+const upToDateTitle = computed(() => {
+  const r = updateResult.value
+  if (!r) return ''
+  // tag 与包内版本号可能不同号：装完这一版（alreadyInstalled）要说清是「已安装」而非版本相等
+  return r.alreadyInstalled
+    ? `已安装最新发布 v${r.release.version}（当前包版本 v${r.current}）`
+    : `已是最新版本（当前 v${r.current}，最新 v${r.release.version}）`
+})
 const updateReleaseMeta = computed(() => {
   const release = updateResult.value?.release
   if (!release) return ''
@@ -298,7 +306,13 @@ async function checkUpdate(): Promise<void> {
   updateError.value = ''
   try {
     updateResult.value = await updateTools.checkUpdate(appVersion)
-    if (!updateResult.value.hasUpdate) ElMessage.success('已是最新版本')
+    if (!updateResult.value.hasUpdate) {
+      ElMessage.success(
+        updateResult.value.alreadyInstalled
+          ? `已安装最新发布 v${updateResult.value.release.version}`
+          : '已是最新版本'
+      )
+    }
   } catch (e) {
     updateResult.value = null
     updateError.value = `检查更新失败：${e instanceof Error ? e.message : String(e)}`

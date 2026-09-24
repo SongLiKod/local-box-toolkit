@@ -51,6 +51,10 @@ cd android && gradle assembleDebug        # 或 assembleRelease（需 Android SD
 
 三端「设置」页都有**检查更新**按钮，检查逻辑统一在 `core/src/update.ts`（GitHub Releases 或自定义 `version.json`，版本比较 / 资产挑选 / 说明与时间格式化三端复用）：
 
+- GitHub 源走 `/releases` 列表接口取首个非草稿，**正式版与 pre-release（beta）都能查到**（`/releases/latest` 只返回正式版，会漏掉 beta）；
+  版本比较按 semver 规则处理 `-beta` 等后缀（`2.0.1-beta > 2.0.0`、`2.0.0 > 2.0.0-beta`）。
+- 发布 tag 只用于 Release 显示与资产命名，可能与包内 `versionName` 不同号，因此安卓端安装成功后会记录已装的发布版本（`localbox:upgrade-installed`），避免同一发布反复提醒。
+
 - **Web / Electron**：设置 → 版本信息 → 检查更新，内联展示已最新或新版本（版本号、发布日期、更新说明、检查时间）；
   有新版时可「打开发布页」「下载安装包」（桌面端挑 Setup 安装包、网页端挑正式 APK），
   Electron 经系统浏览器打开外链，网页端开新标签页。

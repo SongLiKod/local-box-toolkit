@@ -36,6 +36,21 @@ describe('版本比较', () => {
     expect(compareVersion('2', '1.9.9')).toBe(1)
     expect(compareVersion('1.0', '1.0.0')).toBe(0)
   })
+
+  it('pre-release 与正式版比较（beta 能被识别为新版）', () => {
+    // 手机 2.0.0、GitHub 上是 v2.0.1-beta → 有更新
+    expect(compareVersion('2.0.1-beta', '2.0.0')).toBe(1)
+    expect(compareVersion('2.0.0', '2.0.1-beta')).toBe(-1)
+    // 同号：正式版 > pre-release
+    expect(compareVersion('2.0.0', '2.0.0-beta')).toBe(1)
+    expect(compareVersion('2.0.0-beta', '2.0.0')).toBe(-1)
+    expect(compareVersion('2.0.0-beta', '2.0.0-beta')).toBe(0)
+    // semver：alpha < beta，数字段 < 字母段，短 < 长
+    expect(compareVersion('2.0.1-alpha', '2.0.1-beta')).toBe(-1)
+    expect(compareVersion('2.0.1-beta.2', '2.0.1-beta.10')).toBe(-1)
+    expect(compareVersion('2.0.1-rc1', '2.0.1-beta')).toBe(1)
+    expect(compareVersion('v2.0.1-beta', '2.0.1-beta+build5')).toBe(0)
+  })
 })
 
 describe('Release 解析', () => {
@@ -75,21 +90,67 @@ describe('Release 解析', () => {
 })
 
 describe('检查更新', () => {
+  /** 注入固定返回值的 fetch */
+  const mockFetch = (data: unknown): typeof fetch =>
+    (async () =>
+      ({ status: 200, ok: true, json: async () => data }) as unknown as Response) as typeof fetch
+
   it('注入 fetch 解析 GitHub 最新版并判断是否有更新', async () => {
-    const fetchImpl = (async () =>
-      ({
-        status: 200,
-        ok: true,
-        json: async () => ghRelease,
-      }) as unknown as Response) as typeof fetch
+    const fetchImpl = mockFetch([ghRelease])
     const res = await checkUpdate('2.0.0', { fetchImpl })
     expect(res.hasUpdate).toBe(true)
+    expect(res.alreadyInstalled).toBe(false)
     expect(res.release.version).toBe('2.1.0')
     expect(res.current).toBe('2.0.0')
     expect(res.checkedAt).toBeGreaterThan(0)
 
     const same = await checkUpdate('2.1.0', { fetchImpl })
     expect(same.hasUpdate).toBe(false)
+  })
+
+  it('列表接口含 pre-release：beta 也能查到（/releases/latest 会漏掉）', async () => {
+    const beta = {
+      ...ghRelease,
+      tag_name: 'v2.0.1-beta',
+      prerelease: true,
+      draft: false,
+      html_url: '',
+    }
+    const fetchImpl = mockFetch([{ ...ghRelease, draft: true }, beta, ghRelease])
+    const r = await fetchLatestRelease({ fetchImpl })
+    expect(r.version).toBe('2.0.1-beta')
+    expect(r.prerelease).toBe(true)
+    expect(r.htmlUrl).toBe(
+      'https://github.com/SongLiKod/local-box-toolkit/releases/tag/v2.0.1-beta'
+    )
+
+    const res = await checkUpdate('2.0.0', { fetchImpl })
+    expect(res.hasUpdate).toBe(true)
+
+    // 全是草稿（匿名拿不到草稿，等价于空列表）
+    await expect(fetchLatestRelease({ fetchImpl: mockFetch([{ draft: true }]) })).rejects.toThrow(
+      '尚未发布任何版本'
+    )
+    await expect(fetchLatestRelease({ fetchImpl: mockFetch([]) })).rejects.toThrow(
+      '尚未发布任何版本'
+    )
+  })
+
+  it('已安装过的发布不再提示（tag 与包内版本号解耦后靠它去重）', async () => {
+    const fetchImpl = mockFetch([{ ...ghRelease, tag_name: 'v2.0.1-beta', prerelease: true }])
+    const first = await checkUpdate('2.0.0', { fetchImpl })
+    expect(first.hasUpdate).toBe(true)
+
+    // 装完该发布：包内 versionName 仍是 2.0.0，但已记录装过 2.0.1-beta
+    const after = await checkUpdate('2.0.0', { fetchImpl, installedRelease: '2.0.1-beta' })
+    expect(after.hasUpdate).toBe(false)
+    expect(after.alreadyInstalled).toBe(true)
+    expect(after.release.version).toBe('2.0.1-beta')
+
+    // 装的是别的版本不影响提示
+    const other = await checkUpdate('2.0.0', { fetchImpl, installedRelease: '1.9.0' })
+    expect(other.hasUpdate).toBe(true)
+    expect(other.alreadyInstalled).toBe(false)
   })
 
   it('错误状态映射为中文提示', async () => {
@@ -105,12 +166,7 @@ describe('检查更新', () => {
   })
 
   it('自定义升级源覆盖 GitHub', async () => {
-    const fetchImpl = (async () =>
-      ({
-        status: 200,
-        ok: true,
-        json: async () => ({ version: '9.9.9', notes: 'n', url: 'https://x/a.apk' }),
-      }) as unknown as Response) as typeof fetch
+    const fetchImpl = mockFetch({ version: '9.9.9', notes: 'n', url: 'https://x/a.apk' })
     const r = await fetchLatestRelease({ customUrl: 'https://x/v.json', repo: 'a/b', fetchImpl })
     expect(r.version).toBe('9.9.9')
   })
