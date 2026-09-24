@@ -55,8 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import { CATEGORIES, TOOLS, type ToolMeta } from '../registry'
-import { themeClass, themeStyle, themeMode, themePalette, setThemeMode, setThemePalette } from '../composables/useTheme'
+import { CATEGORIES, TOOLS, type ToolMeta } from '../../registry'
+import { themeClass, themeStyle, themeMode, themePalette, setThemeMode, setThemePalette } from '../../composables/useTheme'
 import { THEME_PRESETS, type ThemeMode, type ThemePaletteId } from '@localbox/core/index'
 
 const modes: Array<{ value: ThemeMode; label: string }> = [

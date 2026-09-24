@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- getExternalFilesDir(DIRECTORY_DOWNLOADS)/LocalBox 下的文件（API 28 低版本保存路径） -->
+    <external-files-path name="downloads" path="Download/" />
+    <cache-path name="cache" path="." />
+</paths>

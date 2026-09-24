@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.localbox.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.localbox.app"
+        minSdk 28
+        targetSdk 34
+        versionCode 100
+        versionName "1.0.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+// 构建前需先执行：
+//   npm --prefix mobile run build:h5 && node scripts/copy-android-dist.js
+// CI 检测到 ANDROID_KEYSTORE_BASE64 时会把 scripts/android-signing.gradle 复制为
+// app/signing.gradle 并在本文件末尾追加 apply（见 .github/workflows/release.yml）
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

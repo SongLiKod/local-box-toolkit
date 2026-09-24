@@ -8,5 +8,13 @@ unpackage/
 .vite/
 coverage/
 web/public/ffmpeg/
+mobile/public/ffmpeg/
+# Electron 构建产物（由 prepare-renderer 生成，勿入库）
+electron/renderer/
+electron/release/
+# Android 构建产物与签名材料（由 CI/本地构建生成）
+android/app/src/main/assets/dist/
+android/app/localbox-keystore.jks
+android/app/signing.gradle
 android/keystore.jks
 android/keystore.properties
