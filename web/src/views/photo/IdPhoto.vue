@@ -40,7 +40,7 @@
     <el-row :gutter="20" v-if="resultUrl || files.length">
       <el-col :span="10">
         <div class="lb-label">原图</div>
-        <img v-if="sourceUrl" :src="sourceUrl" class="lb-img" alt="原图" />
+        <img v-if="sourceUrl" :src="sourceUrl" class="lb-img lb-zoomable" alt="原图" @click="openImageViewer(sourceUrl)" />
       </el-col>
       <el-col :span="10">
         <div class="lb-label">
@@ -48,7 +48,7 @@
           <el-tag v-if="faceDetected" size="small" type="success">人脸已定位</el-tag>
           <el-tag v-else-if="processed" size="small" type="warning">未检测到人脸，已按中心裁剪</el-tag>
         </div>
-        <img v-if="resultUrl" :src="resultUrl" class="lb-img" alt="证件照" />
+        <img v-if="resultUrl" :src="resultUrl" class="lb-img lb-zoomable" alt="证件照" @click="openImageViewer(resultUrl)" />
         <div v-if="specInfo" class="lb-spec">{{ specInfo }}</div>
       </el-col>
     </el-row>
@@ -62,6 +62,7 @@ import ToolHeader from '../../components/ToolHeader.vue'
 import FileDrop from '../../components/FileDrop.vue'
 import { photoSpecs, idPhotoTools, saveBlob, loadImage } from '@localbox/core/index'
 import { useToolHistory, useToolParams } from '../../composables/useTool'
+import { openImageViewer } from '../../composables/useImageViewer'
 
 const specs = photoSpecs.PHOTO_SPECS
 const files = ref<File[]>([])

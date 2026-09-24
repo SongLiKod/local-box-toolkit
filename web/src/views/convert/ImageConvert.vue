@@ -38,8 +38,14 @@
     <ProgressBar :visible="running || results.length > 0" :done="done" :total="total" :label="label" :running="running" :status="barStatus" />
 
     <div v-if="results.length" class="lb-preview-grid">
-      <div v-for="r in results.slice(0, 24)" :key="r.name">
-        <img v-if="!r.name.endsWith('.svg')" :src="urlOf(r)" :alt="r.name" />
+      <div v-for="r in visibleResults" :key="r.name">
+        <img
+          v-if="!r.name.endsWith('.svg')"
+          class="lb-zoomable"
+          :src="urlOf(r)"
+          :alt="r.name"
+          @click="openResult(r)"
+        />
         <div class="lb-preview-name">{{ r.name }}（{{ formatBytes(r.blob.size) }}）</div>
         <el-button link type="primary" size="small" @click="saveOne(r)">下载</el-button>
       </div>
@@ -48,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import ToolHeader from '../../components/ToolHeader.vue'
 import FileDrop from '../../components/FileDrop.vue'
@@ -56,6 +62,7 @@ import ProgressBar from '../../components/ProgressBar.vue'
 import { formatBytes, saveBlob, saveBlobs, TaskQueue } from '@localbox/core/index'
 import { convertImage, compressImages } from '@localbox/core/convert/image'
 import { useToolHistory, useToolParams } from '../../composables/useTool'
+import { openImageViewer } from '../../composables/useImageViewer'
 import type { ConvertedFile } from '@localbox/core/index'
 
 const accept = '.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg'
@@ -87,6 +94,16 @@ function urlOf(r: ConvertedFile): string {
     urls.set(r.name, u)
   }
   return u
+}
+
+const visibleResults = computed(() => results.value.slice(0, 24))
+const previewUrls = computed(() =>
+  visibleResults.value.filter((r) => !r.name.endsWith('.svg')).map((r) => urlOf(r))
+)
+
+function openResult(r: ConvertedFile): void {
+  const i = previewUrls.value.indexOf(urlOf(r))
+  if (i >= 0) openImageViewer(previewUrls.value, i)
 }
 
 async function runConvert(): Promise<void> {

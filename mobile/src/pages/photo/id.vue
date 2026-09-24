@@ -2,6 +2,7 @@
   <ToolPage tool-id="idphoto" notice="人脸检测/抠图/换底/300DPI导出全部本地完成，无水印。">
     <view class="lb-card">
       <button class="lb-btn lb-btn-plain" @click="pick">选择人像照片</button>
+      <view v-if="lastFile" class="lb-file">{{ lastFile.name }}</view>
       <view class="lb-label">尺寸</view>
       <picker :range="specNames" :value="specIdx" @change="specIdx = Number($event.detail.value)">
         <view class="lb-input">{{ specNames[specIdx] }}</view>
@@ -41,12 +42,20 @@ const bgs = [
 const bg = ref<'white' | 'blue' | 'red' | 'original'>('white')
 const faceRatio = ref(0.55)
 const previewUrl = ref('')
+const lastFile = ref<File | null>(null)
 const record = useToolHistory('idphoto')
 let resultCanvas: HTMLCanvasElement | null = null
 
 async function pick(): Promise<void> {
   try {
-    await chooseFiles('.jpg,.jpeg,.png,.webp,.bmp', false)
+    const picked = await chooseFiles('.jpg,.jpeg,.png,.webp,.bmp', false)
+    if (picked.length) {
+      const file = picked[0]
+      lastFile.value = file
+      uni.showToast({ title: `已选择：${file.name}`, icon: 'none' })
+    } else {
+      uni.showToast({ title: '未选择照片', icon: 'none' })
+    }
   } catch {
     /* 取消 */
   }
@@ -76,9 +85,8 @@ async function process(): Promise<void> {
 }
 
 function pickFile(): File | null {
-  return lastFile
+  return lastFile.value
 }
-let lastFile: File | null = null
 
 async function exportPng(): Promise<void> {
   if (!resultCanvas) return

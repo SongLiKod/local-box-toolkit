@@ -1,18 +1,16 @@
 <template>
-  <view :class="['lb-page', themeClass]">
+  <view :class="['lb-page', themeClass]" :style="themeStyle">
     <view class="lb-card">
       <view class="lb-head">
-        <view>
-          <view class="lb-title">{{ meta?.name }}</view>
-          <view class="lb-desc">{{ meta?.desc }}</view>
-        </view>
-        <view class="lb-fav" :class="{ on: isFav }" @click="onFav">{{ isFav ? '★' : '☆' }}</view>
+        <text class="lb-head-icon">{{ meta?.icon ?? '🛠️' }}</text>
+        <view class="lb-fav" :class="{ on: isFav }" @click="onFav">{{ isFav ? '★ 已收藏' : '☆ 收藏' }}</view>
       </view>
+      <view class="lb-desc lb-head-desc">{{ meta?.desc }}</view>
       <view v-if="notice" class="lb-notice">{{ notice }}</view>
     </view>
     <slot />
     <view class="lb-foot">
-      <text class="lb-foot-text">本地处理 · 文件不上传</text>
+      <text class="lb-foot-text">🔒 本地处理 · 文件不上传</text>
     </view>
   </view>
 </template>
@@ -20,7 +18,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { toolById } from '../registry'
-import { themeClass } from '../composables/useTheme'
+import { themeClass, themeStyle } from '../composables/useTheme'
 import { store } from '../store'
 
 const props = defineProps<{ toolId: string; notice?: string }>()
@@ -47,24 +45,34 @@ onMounted(refresh)
 .lb-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+.lb-head-icon {
+  font-size: 56rpx;
+  line-height: 1.2;
 }
 .lb-fav {
-  font-size: 44rpx;
+  font-size: 26rpx;
   color: var(--color-text-secondary);
-  padding: 0 10rpx;
+  padding: 14rpx 24rpx;
+  margin-right: -8rpx;
+  background: var(--color-bg-page);
+  border: 1px solid var(--color-border);
+  border-radius: 999rpx;
+  transition: opacity 120ms ease;
+}
+.lb-fav:active {
+  opacity: 0.7;
 }
 .lb-fav.on {
   color: var(--color-warning);
+  border-color: var(--color-warning);
+  background: transparent;
+  font-weight: 600;
 }
-.lb-notice {
-  margin-top: 16rpx;
-  font-size: 24rpx;
-  color: var(--color-warning);
-  background: var(--color-primary-light);
-  padding: 16rpx;
-  border-radius: 12rpx;
-  line-height: 1.6;
+.lb-head-desc {
+  margin-bottom: 0;
 }
 .lb-foot {
   text-align: center;

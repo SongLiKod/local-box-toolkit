@@ -27,6 +27,58 @@ export function toGrayscale(canvas: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 /**
+ * Word(docx) 按原始版式渲染：docx-preview 解析 OOXML 中的页面尺寸、样式表、字体、
+ * 段落间距、表格、页眉页脚与分页符，逐页光栅化为 Canvas，最大程度还原 Word 排版。
+ * 失败时由调用方回退到 mammoth + HTML 渲染。
+ */
+export async function docxToPageCanvases(
+  data: ArrayBuffer,
+  opts: PageRenderOptions
+): Promise<HTMLCanvasElement[]> {
+  const [{ renderAsync }, { default: html2canvas }] = await Promise.all([
+    import('docx-preview'),
+    import('html2canvas'),
+  ])
+  const host = document.createElement('div')
+  host.setAttribute('data-localbox-docx', '')
+  host.setAttribute('style', 'position:fixed;left:-100000px;top:0;background:#ffffff;')
+  document.body.appendChild(host)
+  try {
+    await renderAsync(data, host, host, {
+      className: 'docx',
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false,
+      ignoreFonts: false,
+      breakPages: true,
+      ignoreLastRenderedPageBreak: false,
+      experimental: true,
+      useBase64URL: true,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      renderEndnotes: true,
+    })
+    const pages = Array.from(host.querySelectorAll<HTMLElement>('section.docx'))
+    if (pages.length === 0) throw new Error('docx 版式渲染结果为空')
+    const scale = opts.dpi / 96
+    const canvases: HTMLCanvasElement[] = []
+    for (const page of pages) {
+      const canvas = await html2canvas(page, {
+        scale,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        logging: false,
+      })
+      canvases.push(opts.grayscale ? toGrayscale(canvas) : canvas)
+    }
+    return canvases
+  } finally {
+    host.remove()
+  }
+}
+
+/**
  * 将 HTML 片段离屏渲染并按 A4 分页切分为 Canvas 页。
  * 保留段落、表格、内嵌图片（PRD 3.1.2），表格边框由调用方 HTML 内联样式提供。
  */

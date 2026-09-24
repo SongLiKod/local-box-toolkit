@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.ico" sizes="48x48" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <title>LocalBox 本地工具箱</title>
     <script>
       // mammoth 等库的浏览器兼容垫片
@@ -11,18 +13,70 @@
     </script>
     <script>
       ;(function () {
+        var palettes = {
+          azure: {
+            light: { bgPage: '#F5F7FA', bgCard: '#FFFFFF', textPrimary: '#1D2129', textSecondary: '#6E7681', border: '#E5E6EB', primary: '#1677FF', primaryLight: '#E8F3FF', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#17171A', bgCard: '#232324', textPrimary: '#F2F3F5', textSecondary: '#86909C', border: '#2E2E30', primary: '#4096FF', primaryLight: '#192945', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.3)' }
+          },
+          forest: {
+            light: { bgPage: '#F3F7F4', bgCard: '#FFFFFF', textPrimary: '#1B2A22', textSecondary: '#5E7266', border: '#D7E4DA', primary: '#2F7D4F', primaryLight: '#E5F4EA', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#131A16', bgCard: '#1D2620', textPrimary: '#E8F0EA', textSecondary: '#8AA394', border: '#2B3830', primary: '#5DCA8A', primaryLight: '#1A2E22', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          },
+          ocean: {
+            light: { bgPage: '#F1F7F7', bgCard: '#FFFFFF', textPrimary: '#163033', textSecondary: '#5B7376', border: '#D4E4E4', primary: '#0E8A8A', primaryLight: '#DFF4F3', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#101918', bgCard: '#182322', textPrimary: '#E6F4F2', textSecondary: '#86A8A5', border: '#2A3A38', primary: '#2DD4BF', primaryLight: '#16302E', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          },
+          violet: {
+            light: { bgPage: '#F6F5FB', bgCard: '#FFFFFF', textPrimary: '#241E3A', textSecondary: '#6B6580', border: '#E3DFF0', primary: '#6D5AE6', primaryLight: '#EEEBFF', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#15131D', bgCard: '#201C2B', textPrimary: '#F0EDF8', textSecondary: '#9A93B3', border: '#322C42', primary: '#9B8CFF', primaryLight: '#2A2445', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          },
+          sunset: {
+            light: { bgPage: '#FBF6F1', bgCard: '#FFFDFB', textPrimary: '#2B2218', textSecondary: '#7A6A58', border: '#EADFD3', primary: '#E06B3A', primaryLight: '#FDEEE6', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#1B1612', bgCard: '#27201A', textPrimary: '#F6EDE4', textSecondary: '#B09A86', border: '#3A3128', primary: '#FF8A5B', primaryLight: '#3A2418', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          },
+          rose: {
+            light: { bgPage: '#FBF4F6', bgCard: '#FFFFFF', textPrimary: '#2A1720', textSecondary: '#7A5B68', border: '#EEDDE3', primary: '#D9467A', primaryLight: '#FDE8F0', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#1A1417', bgCard: '#261C21', textPrimary: '#F8EAF0', textSecondary: '#B08A99', border: '#3A2A31', primary: '#F472B6', primaryLight: '#3A1F2C', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          },
+          ink: {
+            light: { bgPage: '#F3F4F6', bgCard: '#FFFFFF', textPrimary: '#1F2329', textSecondary: '#6B7280', border: '#E2E5EA', primary: '#3D4F6F', primaryLight: '#E8ECF2', success: '#00B42A', warning: '#FF7D00', error: '#F53F3F', shadow: 'rgba(0, 0, 0, 0.08)' },
+            dark: { bgPage: '#121316', bgCard: '#1C1E22', textPrimary: '#F3F4F6', textSecondary: '#9CA3AF', border: '#2C2F36', primary: '#8BA3C7', primaryLight: '#232A36', success: '#00C48C', warning: '#FF9500', error: '#FF4D4F', shadow: 'rgba(0, 0, 0, 0.32)' }
+          }
+        }
+        var vars = {
+          bgPage: '--color-bg-page',
+          bgCard: '--color-bg-card',
+          textPrimary: '--color-text-primary',
+          textSecondary: '--color-text-secondary',
+          border: '--color-border',
+          primary: '--color-primary',
+          primaryLight: '--color-primary-light',
+          success: '--color-success',
+          warning: '--color-warning',
+          error: '--color-error',
+          shadow: '--color-shadow'
+        }
         try {
-          var raw = localStorage.getItem('localbox:themeMode')
-          var mode = raw ? JSON.parse(raw) : 'light'
+          var prefRaw = localStorage.getItem('localbox:themePreference')
+          var modeRaw = localStorage.getItem('localbox:themeMode')
+          var pref = prefRaw ? JSON.parse(prefRaw) : null
+          var mode = (pref && pref.mode) || (modeRaw ? JSON.parse(modeRaw) : 'light')
+          var palette = (pref && pref.palette) || 'azure'
           var theme = mode
           if (mode === 'system') {
-            theme =
-              window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-                ? 'dark'
-                : 'light'
+            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
           }
+          if (theme !== 'dark') theme = 'light'
           document.documentElement.classList.remove('light', 'dark')
-          document.documentElement.classList.add(theme === 'dark' ? 'dark' : 'light')
+          document.documentElement.classList.add(theme)
+          document.documentElement.style.colorScheme = theme
+          var tokens = (palettes[palette] || palettes.azure)[theme]
+          if (palette === 'custom' && pref && pref.custom && pref.custom[theme]) {
+            tokens = Object.assign({}, palettes.azure[theme], pref.custom[theme])
+          }
+          Object.keys(vars).forEach(function (k) {
+            if (tokens[k]) document.documentElement.style.setProperty(vars[k], tokens[k])
+          })
         } catch (e) {
           document.documentElement.classList.add('light')
         }

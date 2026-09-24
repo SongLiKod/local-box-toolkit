@@ -28,7 +28,7 @@
       <el-button :disabled="!result" @click="download">下载</el-button>
     </div>
 
-    <div v-if="result" class="lb-preview" v-html="result"></div>
+    <div v-if="result" class="lb-preview lb-zoomable" v-html="result" @click="previewResult"></div>
   </div>
 </template>
 
@@ -38,9 +38,11 @@ import { ElMessage } from 'element-plus'
 import ToolHeader from '../../components/ToolHeader.vue'
 import { codeTools, saveBlob } from '@localbox/core/index'
 import { useToolHistory, useToolParams } from '../../composables/useTool'
+import { openImageViewer } from '../../composables/useImageViewer'
 
 const formats = ['CODE128', 'CODE39', 'EAN13', 'EAN8', 'UPC', 'ITF14', 'pharmacode'] as const
 const result = ref('')
+const previewSrc = ref('')
 const { params } = useToolParams('barcode', {
   kind: 'qr' as 'qr' | 'bar',
   text: 'https://example.com',
@@ -63,14 +65,22 @@ async function gen(): Promise<void> {
         level: params.value.level,
       })
       result.value = `<img src="${url}" width="${params.value.size}" height="${params.value.size}" alt="qrcode" />`
+      previewSrc.value = url
     } else {
-      result.value = codeTools.generateBarcodeSvg(params.value.text, params.value.format)
+      const svg = codeTools.generateBarcodeSvg(params.value.text, params.value.format)
+      result.value = svg
+      previewSrc.value = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
     }
     record('生成', `${params.value.kind === 'qr' ? '二维码' : params.value.format}`)
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : String(e))
     result.value = ''
+    previewSrc.value = ''
   }
+}
+
+function previewResult(): void {
+  if (previewSrc.value) openImageViewer(previewSrc.value)
 }
 
 async function download(): Promise<void> {

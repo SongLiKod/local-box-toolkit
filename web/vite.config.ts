@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       injectRegister: false,
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'pwa-192.png', 'pwa-512.png'],
       manifest: {
         name: 'LocalBox 本地工具箱',
         short_name: 'LocalBox',
@@ -20,6 +20,9 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+          { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {
@@ -36,6 +39,7 @@ export default defineConfig({
   },
   server: {
     fs: { allow: ['..'] },
+    allowedHosts: ['.monkeycode-ai.online'],
   },
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/util'],

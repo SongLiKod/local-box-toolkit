@@ -1,0 +1,243 @@
+name: Build & Release
+
+# 三端构建（参照 SongLiKod/git-green 的 build.yml 模式）：
+#   windows —— Web 构建（vue-tsc 校验 core 类型）+ Electron 打包 Win
+#   android —— mobile H5 构建 + 原生 WebView 壳 gradle 打包 APK（无 DCloud / 无需 DCLOUD_APPID）
+#   release —— tag 或手动填 version 时汇总产物发 GitHub Release
+#
+# 需要配置的 Secrets（可选；不配置则 Android 打未签名包）：
+#   ANDROID_KEYSTORE_BASE64    签名证书 .jks 的 base64 内容
+#   ANDROID_KEYSTORE_PASSWORD  keystore 口令
+#   ANDROID_KEY_ALIAS          证书别名
+#   ANDROID_KEY_PASSWORD       证书口令
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '发布 tag（如 v1.2.0）。留空则仅构建上传 artifact，不打 Release。'
+        required: false
+        default: ''
+        type: string
+      prerelease:
+        description: '标记为预发布（pre-release）'
+        required: false
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  windows:
+    name: Windows (Electron)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+            electron/package-lock.json
+
+      # core/ 依赖声明在根 package.json，web 构建的 vue-tsc 会检查 ../core/src，必须先装根依赖
+      - name: Install core dependencies
+        run: npm ci
+
+      - name: Install web dependencies
+        run: npm --prefix web ci
+
+      - name: Install electron dependencies
+        run: npm --prefix electron ci
+
+      - name: Build web
+        run: npm --prefix web run build
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-web
+          path: web/dist
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build Windows app
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm --prefix electron run dist -- --win
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-windows
+          path: electron/release/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  android:
+    name: Android (APK)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mobile/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Install core dependencies
+        run: npm ci
+
+      - name: Install mobile dependencies
+        run: npm --prefix mobile ci
+
+      - name: Build mobile H5
+        run: npm --prefix mobile run build:h5
+
+      - name: Copy H5 assets into APK project
+        run: node scripts/copy-android-dist.js
+
+      - name: Restore signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "No keystore secret configured, skipping release signing."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/localbox-keystore.jks
+          cp scripts/android-signing.gradle android/app/signing.gradle
+          printf '\napply from: "signing.gradle"\n' >> android/app/build.gradle
+
+      - name: Build APK
+        env:
+          ANDROID_KEYSTORE: localbox-keystore.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        run: gradle assembleDebug assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LocalBox-android
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish Release
+    needs: [windows, android]
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.version != '') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.version }}" ]]; then
+            TAG="${{ inputs.version }}"
+            PRE="${{ inputs.prerelease }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            PRE="false"
+          fi
+          if [[ "$TAG" == *-* ]]; then
+            PRE="true"
+          fi
+          echo "name=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRE" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release files
+        run: |
+          VERSION="${{ steps.tag.outputs.version }}"
+          mkdir -p apk assets
+          echo "Downloaded artifact tree:"
+          find dist-artifacts -type f -print
+
+          # Web 端整体打 zip
+          if [ -d dist-artifacts/LocalBox-web ]; then
+            (cd dist-artifacts/LocalBox-web && zip -qr "$GITHUB_WORKSPACE/assets/LocalBox-web-${VERSION}.zip" .)
+            echo "Prepared assets/LocalBox-web-${VERSION}.zip"
+          fi
+
+          # APK：有签名时为 app-release.apk，无签名时为 app-release-unsigned.apk（保留原名，不冒充正式包）
+          mapfile -t APKS < <(find dist-artifacts -name '*.apk' -type f | sort)
+          if [ ${#APKS[@]} -eq 0 ]; then
+            echo "::error::No APK found in downloaded artifact"
+            exit 1
+          fi
+          for SRC in "${APKS[@]}"; do
+            BASE=$(basename "$SRC")
+            case "$BASE" in
+              app-release.apk)
+                DEST="apk/LocalBox-${VERSION}.apk"
+                ;;
+              app-debug.apk)
+                DEST="apk/LocalBox-${VERSION}-debug.apk"
+                ;;
+              *)
+                DEST="apk/$BASE"
+                ;;
+            esac
+            cp "$SRC" "$DEST"
+            echo "Prepared $DEST from $SRC"
+          done
+
+          # Windows 安装包
+          mapfile -t EXES < <(find dist-artifacts -name '*.exe' -type f | sort)
+          for SRC in "${EXES[@]}"; do
+            BASE=$(basename "$SRC")
+            DEST="assets/${BASE%.exe}-${VERSION}.exe"
+            cp "$SRC" "$DEST"
+            echo "Prepared $DEST from $SRC"
+          done
+
+          ls -lh apk/
+          ls -lh assets/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.name }}
+          files: |
+            apk/*
+            assets/*
+          draft: false
+          prerelease: ${{ steps.tag.outputs.prerelease }}
+          fail_on_unmatched_files: true
+          generate_release_notes: true

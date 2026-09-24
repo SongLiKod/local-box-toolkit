@@ -2,7 +2,7 @@
   <div class="lb-card">
     <ToolHeader
       tool-id="doc2image"
-      notice="Word 保留段落/表格/内嵌图片，Excel 保留单元格边框，PPT 还原幻灯片页面；全部本地渲染。"
+      notice="Word 按原始页面版式渲染（页面尺寸、字体、段落间距、表格、页眉页脚、分页符），Excel 保留单元格边框，PPT 还原幻灯片页面；全部本地渲染。"
     />
     <FileDrop v-model="files" :accept="accept" hint="输入：docx、xlsx、pptx、pdf，可多选批量" />
 
@@ -48,7 +48,12 @@
 
     <div v-if="previews.length" class="lb-preview-grid lb-section">
       <div v-for="(p, i) in previews" :key="i">
-        <img :src="p.url" :alt="`第${i + 1}页`" />
+        <img
+          class="lb-zoomable"
+          :src="p.url"
+          :alt="`第${i + 1}页`"
+          @click="openImageViewer(previewUrls, i)"
+        />
         <div class="lb-preview-name">{{ p.file }}</div>
       </div>
     </div>
@@ -60,8 +65,9 @@
       <el-table-column label="大小" width="120">
         <template #default="{ row }">{{ formatBytes(row.blob.size) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="100">
+      <el-table-column label="操作" width="150">
         <template #default="{ row }">
+          <el-button v-if="canPreview(row)" link type="primary" @click="previewResult(row)">放大</el-button>
           <el-button link type="primary" @click="saveOne(row)">下载</el-button>
         </template>
       </el-table-column>
@@ -70,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ToolHeader from '../../components/ToolHeader.vue'
 import FileDrop from '../../components/FileDrop.vue'
@@ -78,12 +84,15 @@ import ProgressBar from '../../components/ProgressBar.vue'
 import { formatBytes, saveBlob, saveBlobs, TaskQueue } from '@localbox/core/index'
 import { fileToImages, getPageCount, previewThumbnails } from '@localbox/core/convert/toImage'
 import { useToolHistory, useToolParams } from '../../composables/useTool'
+import { openImageViewer } from '../../composables/useImageViewer'
 import type { ConvertedFile } from '@localbox/core/index'
 
 const accept = '.docx,.xlsx,.pptx,.pdf'
 const files = ref<File[]>([])
 const results = ref<ConvertedFile[]>([])
 const previews = ref<Array<{ url: string; file: string }>>([])
+const previewUrls = computed(() => previews.value.map((p) => p.url))
+const resultUrls = new Map<string, string>()
 const running = ref(false)
 const previewing = ref(false)
 const done = ref(0)
@@ -143,6 +152,7 @@ async function run(): Promise<void> {
   if (!(await checkMemoryRisk())) return
   running.value = true
   barStatus.value = ''
+  revokeResultUrls()
   results.value = []
   done.value = 0
   total.value = files.value.length
@@ -181,6 +191,24 @@ async function run(): Promise<void> {
 
 async function saveOne(row: ConvertedFile): Promise<void> {
   await saveBlob(row.name, row.blob)
+}
+
+function canPreview(row: ConvertedFile): boolean {
+  return !row.name.toLowerCase().endsWith('.tiff')
+}
+
+function previewResult(row: ConvertedFile): void {
+  let url = resultUrls.get(row.name)
+  if (!url) {
+    url = URL.createObjectURL(row.blob)
+    resultUrls.set(row.name, url)
+  }
+  openImageViewer(url)
+}
+
+function revokeResultUrls(): void {
+  resultUrls.forEach((u) => URL.revokeObjectURL(u))
+  resultUrls.clear()
 }
 
 async function downloadAll(): Promise<void> {

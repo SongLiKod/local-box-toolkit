@@ -33,10 +33,30 @@
 
     <template v-if="hist.length">
       <h4 class="lb-sub">本地历史记录</h4>
+      <p class="lb-hist-hint">点击条目可查看当时生成的 UUID，不会重新生成。</p>
       <div class="lb-history-list">
-        <div v-for="h in hist" :key="h.id" class="lb-hist-row">
-          <span>{{ h.detail }}</span>
-          <el-button link size="small" @click="restore(h)">{{ new Date(h.time).toLocaleString() }}</el-button>
+        <div v-for="h in hist" :key="h.id" class="lb-hist-item">
+          <div class="lb-hist-row" @click="toggle(h)">
+            <span class="lb-hist-detail">{{ h.detail }}</span>
+            <span class="lb-hist-time">{{ new Date(h.time).toLocaleString() }}</span>
+          </div>
+          <div v-if="openId === h.id" class="lb-hist-body">
+            <template v-if="openedPayload(h)">
+              <p v-if="openedPayload(h)?.truncated" class="lb-hist-note">数量较多，仅保存了前 {{ openedPayload(h)?.uuids.length }} 条。</p>
+              <div class="lb-hist-uuids">
+                <div v-for="(u, i) in openedPayload(h)?.uuids" :key="i" class="lb-uuid-row">
+                  <span class="lb-uuid-idx">{{ i + 1 }}</span>
+                  <code>{{ u }}</code>
+                  <el-button link type="primary" size="small" @click.stop="copyOne(u)">复制</el-button>
+                </div>
+              </div>
+              <div class="lb-hist-actions">
+                <el-button size="small" @click.stop="restore(h)">恢复到结果区</el-button>
+                <el-button size="small" @click.stop="copyHist(h)">复制全部</el-button>
+              </div>
+            </template>
+            <p v-else class="lb-hist-note">该条旧记录未保存 UUID 内容，仅记录了生成参数。</p>
+          </div>
         </div>
       </div>
     </template>
@@ -47,12 +67,13 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import ToolHeader from '../../components/ToolHeader.vue'
-import { saveBlob, uuidTools, type UuidVersion, type HistoryItem } from '@localbox/core/index'
+import { saveBlob, uuidTools, type UuidVersion, type HistoryItem, type UuidHistoryPayload } from '@localbox/core/index'
 import { store } from '../../store/bootstrap'
 import { useToolHistory, useToolParams } from '../../composables/useTool'
 
 const list = ref<string[]>([])
 const hist = ref<HistoryItem[]>([])
+const openId = ref('')
 const { params } = useToolParams('uuid', {
   version: 'v4' as UuidVersion,
   count: 10,
@@ -67,7 +88,11 @@ async function gen(): Promise<void> {
       name: params.value.name,
       namespace: params.value.namespace,
     })
-    record('生成UUID', `${params.value.version} × ${list.value.length}`)
+    const payload = uuidTools.buildUuidHistoryPayload(params.value.version, list.value, {
+      name: params.value.name,
+      namespace: params.value.namespace,
+    })
+    await record('生成UUID', uuidTools.summarizeUuidHistory(payload), payload)
     await reloadHist()
   } catch (e) {
     ElMessage.error(e instanceof Error ? e.message : String(e))
@@ -95,12 +120,33 @@ async function reloadHist(): Promise<void> {
   hist.value = all.filter((h) => h.toolId === 'uuid' && h.action === '生成UUID').slice(0, 10)
 }
 
+function openedPayload(h: HistoryItem): UuidHistoryPayload | null {
+  return uuidTools.parseUuidHistory(h)
+}
+
+function toggle(h: HistoryItem): void {
+  openId.value = openId.value === h.id ? '' : h.id
+}
+
 function restore(h: HistoryItem): void {
-  const m = h.detail.match(/× (\d+)/)
-  if (m) {
-    params.value.count = parseInt(m[1], 10)
-    void gen()
+  const payload = uuidTools.parseUuidHistory(h)
+  if (!payload) {
+    ElMessage.warning('该条旧记录未保存 UUID 内容')
+    return
   }
+  params.value.version = payload.version
+  params.value.count = payload.count
+  if (payload.name) params.value.name = payload.name
+  if (payload.namespace) params.value.namespace = payload.namespace
+  list.value = payload.uuids.slice()
+  ElMessage.success('已恢复历史 UUID')
+}
+
+async function copyHist(h: HistoryItem): Promise<void> {
+  const payload = uuidTools.parseUuidHistory(h)
+  if (!payload) return
+  await navigator.clipboard.writeText(payload.uuids.join('\n'))
+  ElMessage.success('已复制全部')
 }
 
 onMounted(() => {
@@ -131,11 +177,52 @@ onMounted(() => {
 .lb-sub {
   margin: 18px 0 6px;
 }
+.lb-hist-hint {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0 0 8px;
+}
+.lb-hist-item {
+  border-bottom: 1px solid var(--color-border);
+}
 .lb-hist-row {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   font-size: 13px;
-  padding: 4px 0;
+  padding: 8px 0;
   color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.lb-hist-detail {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-hist-time {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.lb-hist-body {
+  padding: 0 0 10px;
+}
+.lb-hist-uuids {
+  max-height: 220px;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.lb-hist-note {
+  font-size: 12px;
+  color: var(--color-warning);
+  margin: 0 0 8px;
+}
+.lb-hist-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }
 </style>

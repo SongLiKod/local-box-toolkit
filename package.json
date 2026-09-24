@@ -21,6 +21,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/uuid": "^9.0.8",
     "crypto-js": "^4.2.0",
+    "docx-preview": "^0.4.1",
     "gifenc": "^1.0.3",
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.11.6",

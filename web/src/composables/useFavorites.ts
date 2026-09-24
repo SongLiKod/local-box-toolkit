@@ -32,10 +32,11 @@ export async function recordHistory(
   toolId: string,
   toolName: string,
   action: string,
-  detail: string
+  detail: string,
+  payload?: unknown
 ): Promise<void> {
   try {
-    await store.addHistory({ toolId, toolName, action, detail })
+    await store.addHistory({ toolId, toolName, action, detail, payload })
     history.value = await store.getHistory()
   } catch {
     /* 忽略记录失败 */

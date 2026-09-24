@@ -13,7 +13,20 @@ declare global {
   }
 }
 
+import type { ThemePaletteId, ThemeTokens } from './theme/palettes'
+
 export type ThemeMode = 'light' | 'dark' | 'system'
+
+export interface ThemeCustomColors {
+  light?: Partial<ThemeTokens>
+  dark?: Partial<ThemeTokens>
+}
+
+export interface ThemePreference {
+  mode: ThemeMode
+  palette: ThemePaletteId
+  custom?: ThemeCustomColors
+}
 
 export interface FavoriteItem {
   toolId: string
@@ -27,6 +40,7 @@ export interface HistoryItem {
   action: string
   detail: string
   time: number
+  payload?: unknown
 }
 
 export interface ProgressInfo {
@@ -40,4 +54,21 @@ export type ProgressCb = (info: ProgressInfo) => void
 export interface ConvertedFile {
   name: string
   blob: Blob
+}
+
+export interface NoteItem {
+  id: string
+  title: string
+  body: string
+  updatedAt: number
+}
+
+export interface LocalBackup {
+  version: 1
+  exportedAt: number
+  themePreference?: ThemePreference
+  favorites?: FavoriteItem[]
+  history?: HistoryItem[]
+  toolParams?: Record<string, unknown>
+  notes?: NoteItem[]
 }

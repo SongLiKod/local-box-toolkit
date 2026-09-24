@@ -14,7 +14,8 @@
 - 样式方案：SCSS + CSS全局变量（主题切换）
 - 核心依赖库：
   - `pdfjs-dist`：PDF解析、PDF渲染转图片
-  - `mammoth`：docx文档解析
+  - `mammoth`：docx纯文本/HTML抽取（Office互转、兜底渲染）
+  - `docx-preview`：docx按原始页面版式渲染（转图片主渲染路径）
   - `xlsx`：Excel解析
   - `pptxgenjs`：PPT解析
   - `jszip`：批量文件打包ZIP
@@ -95,7 +96,8 @@
 #### 4.1.2 Office/PDF 转图片
 
 - PDF：pdfjs 渲染页面到 Canvas 导出图片。
-- Word/Excel/PPT：Wasm 渲染文档页面至 Canvas，再导出图片。
+- Word：docx-preview 解析 OOXML 版式（页面尺寸、样式表、字体、段落、表格、页眉页脚、分页符）渲染到 DOM，再逐页光栅化为 Canvas；解析失败时回退 mammoth + html2canvas。
+- Excel/PPT：渲染文档页面至 Canvas，再导出图片。
 - 参数控制：DPI、灰度 / 彩色、页码范围、分页 / 长图拼接、图片质量。
 - 批量处理，打包 ZIP。
 
