@@ -4,6 +4,8 @@ import * as path from 'path'
 import { configGet, configSet } from './configStore'
 
 const RENDERER_DIR = path.join(__dirname, '..', 'renderer')
+// 窗口/任务栏图标（dev 下 build/ 存在；打包后 build/ 不入 asar，回退使用 exe 内嵌图标）
+const APP_ICON = path.join(__dirname, '..', 'build', 'icon.png')
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -40,6 +42,7 @@ function createWindow(): void {
     backgroundColor: '#F5F7FA',
     autoHideMenuBar: true,
     title: 'LocalBox 本地工具箱',
+    ...(fs.existsSync(APP_ICON) ? { icon: APP_ICON } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

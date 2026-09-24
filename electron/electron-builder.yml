@@ -18,6 +18,8 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
   # 可选桌面快捷方式（PRD 4.2）
   createDesktopShortcut: true
   createStartMenuShortcut: true

@@ -1,7 +1,10 @@
 <template>
   <view :class="['lb-page', themeClass]" :style="themeStyle">
     <view class="lb-card lb-hero">
-      <view class="lb-hero-title">LocalBox 本地工具箱</view>
+      <view class="lb-hero-head">
+        <image class="lb-hero-logo" :src="logoUrl" mode="aspectFit" />
+        <view class="lb-hero-title">LocalBox 本地工具箱</view>
+      </view>
       <view class="lb-desc lb-hero-desc">全部运算本地执行 · 文件不上传 · 无广告 · 基础功能无次数限制</view>
     </view>
 
@@ -39,6 +42,7 @@
 <script setup lang="ts">
 import { CATEGORIES, TOOLS, type ToolMeta } from '../../registry'
 import { themeClass, themeStyle } from '../../composables/useTheme'
+import logoUrl from '../../assets/logo.png'
 
 function toolsOf(cat: string): ToolMeta[] {
   return TOOLS.filter((t) => t.category === cat)
@@ -49,6 +53,17 @@ function go(route: string): void {
 </script>
 
 <style scoped>
+.lb-hero-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+.lb-hero-logo {
+  width: 64rpx;
+  height: 64rpx;
+  flex-shrink: 0;
+  margin-right: 16rpx;
+}
 .lb-hero-title {
   font-size: 40rpx;
   font-weight: 700;
