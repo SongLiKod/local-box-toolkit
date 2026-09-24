@@ -242,7 +242,8 @@ class Updater(
                 }
                 else -> {
                     abandon(intent)
-                    val msg = intent.getStringExtra(PackageInstaller.EXTRA_MESSAGE) ?: "安装失败"
+                    val msg =
+                        intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "安装失败"
                     finish("error", msg)
                 }
             }
