@@ -33,6 +33,13 @@ export const TOOLS: ToolMeta[] = [
   { id: 'radix', name: '进制转换', desc: '2~36 进制互转', icon: '🔢', category: 'dev', route: '/pages/dev/radix' },
   { id: 'ip', name: 'IP地址工具', desc: 'IPv4/IPv6 互转/子网计算', icon: '🌐', category: 'dev', route: '/pages/dev/ip' },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', icon: '🪪', category: 'photo', route: '/pages/photo/id' },
+  { id: 'image-edit', name: '图片编辑', desc: '裁剪/缩放/旋转/水印/去底色', icon: '✏️', category: 'photo', route: '/pages/photo/edit' },
+  { id: 'units', name: '单位换算', desc: '长度/面积/重量/温度互转', icon: '📏', category: 'life', route: '/pages/life/units' },
+  { id: 'time-convert', name: '时间换算', desc: '时区换算/日期差/加减天数', icon: '📆', category: 'life', route: '/pages/life/time' },
+  { id: 'color', name: '颜色取色器', desc: 'HEX/RGB/HSL与图片取色', icon: '🎨', category: 'life', route: '/pages/life/color' },
+  { id: 'rename', name: '批量文件重命名', desc: '规则批量改名与脚本导出', icon: '🏷️', category: 'life', route: '/pages/life/rename' },
+  { id: 'text-tool', name: '文本处理', desc: '去空格/去空行/字数统计', icon: '🔤', category: 'life', route: '/pages/life/text' },
+  { id: 'exif', name: '图片EXIF清除', desc: '剥离照片元数据保护隐私', icon: '🧹', category: 'life', route: '/pages/life/exif' },
   { id: 'diff', name: '文本对比', desc: '逐行对比增删', icon: '🆚', category: 'life', route: '/pages/life/diff' },
   { id: 'notes', name: '本地便签', desc: '本机保存备忘', icon: '📝', category: 'life', route: '/pages/life/notes' },
 ]

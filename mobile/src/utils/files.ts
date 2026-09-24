@@ -164,6 +164,39 @@ export function saveBlobAs(name: string, blob: Blob): void {
   uni.showToast({ title: '请在导出菜单保存文件', icon: 'none' })
 }
 
+// #ifdef H5
+let colorPickEl: HTMLInputElement | null = null
+// #endif
+/**
+ * 打开系统调色板选色（H5/WebView 回调式）：确认选择时回调大写 hex，取消不回调。
+ * 复用单个隐藏 input[type=color]，避免反复创建残留节点；非 H5 环境为空操作（页面保留 HEX 输入兜底）。
+ */
+export function openColorPicker(initial: string, onPick: (hex: string) => void): void {
+  // #ifdef H5
+  if (!colorPickEl) {
+    colorPickEl = document.createElement('input')
+    colorPickEl.type = 'color'
+    colorPickEl.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0'
+    document.body.appendChild(colorPickEl)
+  }
+  const el = colorPickEl
+  try {
+    el.value = initial
+  } catch {
+    /* 非法初值忽略，浏览器保留默认色 */
+  }
+  el.oninput = () => onPick(el.value.toUpperCase())
+  el.onchange = () => {
+    onPick(el.value.toUpperCase())
+    el.oninput = null
+    el.onchange = null
+  }
+  el.click()
+  // #endif
+  void initial
+  void onPick
+}
+
 interface PlusFile {
   name: string
   type: string
