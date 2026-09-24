@@ -1,7 +1,7 @@
 /**
  * 应用内自升级（仅安卓 WebView 壳内具备安装能力；浏览器预览只可检查）
  *
- * 升级源二选一（见下方常量）：
+ * 升级源二选一（源解析、版本比较复用 core/src/update.ts，见下方常量）：
  *  - 默认 GitHub Releases：tag 作版本号、Release body 作说明、
  *    取 `.apk` 正式资产（排除 debug / unsigned），匿名可访问、CI 自动上传
  *  - 自定义 version.json（支持 CORS 的 HTTPS）：
@@ -14,11 +14,12 @@
  */
 
 import rootPkg from '../../../package.json'
+import { updateTools } from '@localbox/core/index'
 
-// 自定义升级源；留空 = 使用 GitHub Releases
+// 自定义升级源；留空 = 使用 GitHub Releases（源解析与版本比较统一在 core/update）
 export const CUSTOM_VERSION_URL = ''
 // GitHub 仓库（owner/repo，需公开可匿名访问）
-export const GITHUB_REPO = 'SongLiKod/local-box-toolkit'
+export const GITHUB_REPO = updateTools.DEFAULT_UPDATE_REPO
 
 /** 构建时内联的版本号（唯一来源 = 仓库根 package.json）；安卓壳内以原生 versionName 为准 */
 export const APP_VERSION: string = rootPkg.version
@@ -26,8 +27,13 @@ export const APP_VERSION: string = rootPkg.version
 export interface UpgradeInfo {
   version: string
   notes: string
+  /** APK 直链（安装用） */
   url: string
   sha256: string
+  /** Release 页面地址（浏览器打开），自定义源可能为空串 */
+  htmlUrl: string
+  /** 发布时间（ISO），未知为空串 */
+  publishedAt: string
 }
 
 export interface UpgradeResult {
@@ -39,6 +45,8 @@ interface UpgradeBridge {
   getVersion(): string
   canInstall(): boolean
   startUpdate(url: string, sha256: string): void
+  /** 用系统浏览器打开外部地址（发布页等） */
+  openUrl?(url: string): void
 }
 
 declare global {
@@ -62,76 +70,46 @@ export function currentVersion(): string {
   }
 }
 
-function toParts(v: string): number[] {
-  return v.trim().replace(/^v/i, '').split('.').map((n) => Number.parseInt(n, 10) || 0)
-}
+/** 版本比较（委托 core/update，保留导出兼容旧引用） */
+export const compareVersion = updateTools.compareVersion
 
-/** 版本比较：a > b → 1，相等 → 0，a < b → -1（按 . 分段数值比较） */
-export function compareVersion(a: string, b: string): number {
-  const pa = toParts(a)
-  const pb = toParts(b)
-  const len = Math.max(pa.length, pb.length)
-  for (let i = 0; i < len; i++) {
-    const x = pa[i] ?? 0
-    const y = pb[i] ?? 0
-    if (x !== y) return x > y ? 1 : -1
-  }
-  return 0
-}
-
-async function fetchJson(url: string, notFoundMsg: string): Promise<Record<string, unknown>> {
-  const res = await fetch(url, { headers: { Accept: 'application/json' } })
-  if (res.status === 404) throw new Error(notFoundMsg)
-  if (res.status === 403 || res.status === 429) throw new Error('接口限流，请稍后再试')
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return (await res.json()) as Record<string, unknown>
-}
-
-interface GhAsset {
-  name: string
-  browser_download_url: string
-  digest?: string | null
-}
-
-async function fetchGitHubLatest(): Promise<UpgradeInfo> {
-  const data = await fetchJson(
-    `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
-    '尚未发布任何版本'
-  )
-  const version = String(data.tag_name ?? '').replace(/^v/i, '')
-  if (!version) throw new Error('Release 缺少版本号（tag）')
-  const assets = (Array.isArray(data.assets) ? data.assets : []) as GhAsset[]
+function toUpgradeInfo(release: updateTools.UpdateRelease): UpgradeInfo {
   // 只取正式签名包：debug 包与未签名包无法覆盖安装
-  const apk = assets.find((a) => a.name.endsWith('.apk') && !/debug|unsigned/i.test(a.name))
+  const apk = updateTools.pickAsset(release, 'apk')
   if (!apk) throw new Error('Release 中没有可安装的正式 APK')
-  const digest =
-    typeof apk.digest === 'string' && apk.digest.startsWith('sha256:') ? apk.digest.slice(7) : ''
   return {
-    version,
-    notes: String(data.body ?? data.name ?? ''),
-    url: apk.browser_download_url,
-    sha256: digest,
-  }
-}
-
-async function fetchCustomLatest(): Promise<UpgradeInfo> {
-  const data = await fetchJson(CUSTOM_VERSION_URL, '升级源地址不存在（404）')
-  const version = String(data.version ?? '').replace(/^v/i, '')
-  const url = String(data.url ?? '')
-  if (!version || !url) throw new Error('version.json 缺少 version 或 url')
-  return {
-    version,
-    notes: String(data.notes ?? ''),
-    url,
-    sha256: String(data.sha256 ?? '').trim(),
+    version: release.version,
+    notes: release.notes,
+    url: apk.url,
+    sha256: apk.sha256,
+    htmlUrl: release.htmlUrl,
+    publishedAt: release.publishedAt,
   }
 }
 
 /** 检查更新：有新版本返回信息，已是最新返回 null，网络/数据源错误抛异常 */
 export async function checkForUpdate(current?: string): Promise<UpgradeInfo | null> {
   const cur = current || currentVersion() || '0.0.0'
-  const info = CUSTOM_VERSION_URL ? await fetchCustomLatest() : await fetchGitHubLatest()
-  return compareVersion(info.version, cur) > 0 ? info : null
+  const res = await updateTools.checkUpdate(cur, {
+    repo: GITHUB_REPO,
+    ...(CUSTOM_VERSION_URL ? { customUrl: CUSTOM_VERSION_URL } : {}),
+  })
+  if (!res.hasUpdate) return null
+  return toUpgradeInfo(res.release)
+}
+
+/**
+ * 用系统浏览器打开外部地址（Release 页面等）。
+ * 安卓壳走原生 openUrl；网页预览直接 window.open。
+ */
+export function openExternalUrl(url: string): void {
+  if (!/^https?:\/\//i.test(url)) return
+  const b = bridge()
+  if (b?.openUrl) {
+    b.openUrl(url)
+    return
+  }
+  if (typeof window !== 'undefined') window.open(url, '_blank', 'noopener')
 }
 
 // 是否有升级流程进行中（防止启动提醒与设置页并发触发）
@@ -140,11 +118,13 @@ let running = false
 /**
  * 执行升级（仅安卓壳内；浏览器返回 unsupported）。终态 resolve、不抛异常。
  * 首次会先弹授权说明 → 系统设置授权返回后原生自动继续；
- * 下载进度经 showLoading 展示，[onStatus] 同步回传文字（设置页可内联展示）。
+ * 下载进度经 showLoading 展示，[onStatus] 回传文字、[onProgress] 回传百分比
+ * （设置页据此渲染内联进度条）。
  */
 export function runUpgrade(
   info: UpgradeInfo,
-  onStatus?: (text: string) => void
+  onStatus?: (text: string) => void,
+  onProgress?: (percent: number) => void
 ): Promise<UpgradeResult> {
   return new Promise((resolve) => {
     const b = bridge()
@@ -181,6 +161,7 @@ export function runUpgrade(
           const pct = Math.min(100, Math.max(0, Number(evt.data ?? 0)))
           uni.showLoading({ title: `下载中 ${pct}%`, mask: true })
           onStatus?.(`下载中 ${pct}%`)
+          onProgress?.(pct)
           break
         }
         case 'staged':

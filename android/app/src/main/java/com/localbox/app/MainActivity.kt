@@ -32,6 +32,7 @@ import java.util.concurrent.Executors
  * - window.AndroidBridge.saveBase64：把前端处理结果保存到系统下载目录（Download/LocalBox）
  * - onShowFileChooser：接管页面 <input type="file">，调起系统文件选择器
  * - window.AndroidBridge.startUpdate：应用内自升级（详见 Updater.kt）
+ * - window.AndroidBridge.openUrl：用系统浏览器打开外部链接（Release 页面等）
  */
 class MainActivity : AppCompatActivity() {
 
@@ -139,6 +140,12 @@ class MainActivity : AppCompatActivity() {
         fun startUpdate(url: String?, sha256: String?) {
             updater.startUpdate(url ?: "", sha256 ?: "")
         }
+
+        /** 用系统浏览器打开外部地址（Release 页面等） */
+        @JavascriptInterface
+        fun openUrl(url: String?) {
+            openExternal(url)
+        }
     }
 
     /**
@@ -223,6 +230,21 @@ class MainActivity : AppCompatActivity() {
         evaluateJs("window.__localboxUpdateEvent && window.__localboxUpdateEvent($json)")
     }
 
+    /** 外部 http/https 链接交系统浏览器打开；仅应用内伪域名留在 WebView，成功返回 true */
+    private fun openExternal(url: String?): Boolean {
+        val target = url ?: return false
+        if (!target.startsWith("http://") && !target.startsWith("https://")) return false
+        return try {
+            startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(target)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            true
+        } catch (e: Exception) {
+            Log.w("LocalBox", "open external failed: $target", e)
+            false
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -239,6 +261,16 @@ class MainActivity : AppCompatActivity() {
                 request: android.webkit.WebResourceRequest
             ): android.webkit.WebResourceResponse? {
                 return assetLoader.shouldInterceptRequest(request.url)
+            }
+
+            // 应用内伪域名（本地资源）继续由 WebView 加载，其余外链交系统浏览器，
+            // 避免 Release 页面等外链把应用内 WebView 走丢
+            override fun shouldOverrideUrlLoading(
+                view: WebView,
+                request: android.webkit.WebResourceRequest
+            ): Boolean {
+                if (request.url.host == "appassets.androidplatform.net") return false
+                return openExternal(request.url.toString())
             }
         }
 

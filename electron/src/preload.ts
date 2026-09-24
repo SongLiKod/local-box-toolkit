@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld('localboxNative', {
   renameFiles: (map: Record<string, string>): Promise<string[]> =>
     ipcRenderer.invoke('file:rename', map),
   openPath: (p: string): Promise<string> => ipcRenderer.invoke('shell:open', p),
+  openExternal: async (url: string): Promise<void> => {
+    await ipcRenderer.invoke('shell:external', url)
+  },
 })

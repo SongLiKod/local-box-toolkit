@@ -77,8 +77,58 @@
 
     <div class="lb-group">
       <div class="lb-glabel">版本信息</div>
-      <el-tag size="small">LocalBox v{{ appVersion }}</el-tag>
-      <span class="lb-hint">与 Electron、安卓端及应用内升级检查同源</span>
+      <div class="lb-row">
+        <el-tag size="small">LocalBox v{{ appVersion }}</el-tag>
+        <el-button size="small" type="primary" :loading="checking" @click="checkUpdate">
+          检查更新
+        </el-button>
+        <span class="lb-hint">与 Electron、安卓端及应用内升级检查同源</span>
+      </div>
+
+      <el-alert
+        v-if="updateError"
+        class="lb-update-alert"
+        type="error"
+        :closable="false"
+        show-icon
+        :title="updateError"
+      />
+
+      <el-alert
+        v-else-if="updateResult && !updateResult.hasUpdate"
+        class="lb-update-alert"
+        type="success"
+        :closable="false"
+        show-icon
+        :title="`已是最新版本（当前 v${updateResult.current}，最新 v${updateResult.release.version}）`"
+        :description="`检查于 ${lastCheckedLabel}`"
+      />
+
+      <div v-else-if="updateResult" class="lb-update">
+        <el-alert
+          class="lb-update-alert"
+          type="warning"
+          :closable="false"
+          show-icon
+          :title="`发现新版本 v${updateResult.release.version}（当前 v${updateResult.current}）`"
+          :description="updateReleaseMeta"
+        />
+        <div class="lb-notes">
+          <div v-for="(line, i) in updateNotes" :key="i" class="lb-note-line">{{ line }}</div>
+          <div v-if="!updateNotes.length" class="lb-note-line">本次更新未提供更新说明。</div>
+        </div>
+        <div class="lb-row">
+          <el-button size="small" type="primary" @click="openReleasePage">打开发布页</el-button>
+          <el-button v-if="updateAsset" size="small" @click="downloadUpdateAsset">
+            下载 {{ updateAsset.name }}{{ assetSizeLabel }}
+          </el-button>
+        </div>
+        <p class="lb-hint-block">
+          {{ isDesktop
+            ? '桌面端：下载安装包后覆盖安装即可；配置与数据保留在 AppData。'
+            : '网页端可在发布页下载安装包；安卓 App 内可在「设置 → 版本与更新」一键应用内升级。' }}
+        </p>
+      </div>
     </div>
 
     <div class="lb-group">
@@ -108,9 +158,11 @@ import {
   resolveAppearanceTokens,
   type ResolvedTheme,
   saveBlob,
+  updateTools,
   type LocalBackup,
   type ThemePaletteId,
   type ThemeTokens,
+  type UpdateCheck,
 } from '@localbox/core/index'
 import {
   resolvedTheme,
@@ -212,6 +264,68 @@ async function clearAll(): Promise<void> {
   await loadFavorites()
   ElMessage.success('已清空本地数据')
 }
+
+/* ---------- 版本检查（core/update，与移动端同源） ---------- */
+const checking = ref(false)
+const updateResult = ref<UpdateCheck | null>(null)
+const updateError = ref('')
+
+const lastCheckedLabel = computed(() =>
+  updateResult.value ? updateTools.formatReleaseTime(new Date(updateResult.value.checkedAt).toISOString()) : ''
+)
+const updateReleaseMeta = computed(() => {
+  const release = updateResult.value?.release
+  if (!release) return ''
+  const parts: string[] = []
+  if (release.publishedAt) parts.push(`发布于 ${updateTools.formatReleaseTime(release.publishedAt)}`)
+  if (release.prerelease) parts.push('预发布版本')
+  if (lastCheckedLabel.value) parts.push(`检查于 ${lastCheckedLabel.value}`)
+  return parts.join(' · ')
+})
+const updateNotes = computed(() =>
+  updateResult.value ? updateTools.releaseNotesLines(updateResult.value.release.notes) : []
+)
+const updateAsset = computed(() =>
+  updateResult.value ? updateTools.pickAsset(updateResult.value.release, isDesktop ? 'desktop' : 'apk') : null
+)
+const assetSizeLabel = computed(() =>
+  updateAsset.value?.size ? `（${updateTools.formatSize(updateAsset.value.size)}）` : ''
+)
+
+async function checkUpdate(): Promise<void> {
+  if (checking.value) return
+  checking.value = true
+  updateError.value = ''
+  try {
+    updateResult.value = await updateTools.checkUpdate(appVersion)
+    if (!updateResult.value.hasUpdate) ElMessage.success('已是最新版本')
+  } catch (e) {
+    updateResult.value = null
+    updateError.value = `检查更新失败：${e instanceof Error ? e.message : String(e)}`
+  } finally {
+    checking.value = false
+  }
+}
+
+/** 外链统一出口：Electron 走系统浏览器，Web 开新标签页 */
+async function openUrl(url: string): Promise<void> {
+  if (!/^https?:\/\//i.test(url)) return
+  if (nativeBridge?.openExternal) {
+    await nativeBridge.openExternal(url)
+    return
+  }
+  window.open(url, '_blank', 'noopener')
+}
+
+function openReleasePage(): void {
+  const url = updateResult.value?.release.htmlUrl
+  if (url) void openUrl(url)
+}
+
+function downloadUpdateAsset(): void {
+  const url = updateAsset.value?.url
+  if (url) void openUrl(url)
+}
 </script>
 
 <style scoped>
@@ -290,5 +404,29 @@ async function clearAll(): Promise<void> {
   align-items: center;
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+.lb-update-alert {
+  margin-top: 10px;
+}
+.lb-update {
+  margin-top: 2px;
+}
+.lb-notes {
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-page);
+}
+.lb-note-line {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+.lb-update .lb-row {
+  margin-top: 10px;
 }
 </style>

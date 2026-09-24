@@ -29,6 +29,12 @@ export type {
   CronPreset,
 } from './devtools/cron'
 export type { SubnetInfo, Ipv4FullInfo, Ipv6FullInfo, Ipv4Parts } from './tools/ip'
+export type {
+  UpdateAsset,
+  UpdateRelease,
+  UpdateCheck,
+  UpdateFetchOptions,
+} from './update'
 export * from './storage/adapter'
 export * from './storage/store'
 export * from './storage/memory'
@@ -56,6 +62,7 @@ export * as radixTools from './devtools/radix'
 export * as diffTools from './tools/diff'
 export * as ipTools from './tools/ip'
 export * as cronTools from './devtools/cron'
+export * as updateTools from './update'
 
 export * as docxTools from './convert/docx'
 export * as xlsxTools from './convert/xlsx'

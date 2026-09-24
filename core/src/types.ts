@@ -5,6 +5,8 @@ export interface NativeBridge {
   saveFile(name: string, data: ArrayBuffer): Promise<string | null>
   renameFiles(map: Record<string, string>): Promise<string[]>
   openPath(path: string): Promise<string>
+  /** 用系统浏览器打开外部地址（发布页等） */
+  openExternal?(url: string): Promise<void>
 }
 
 declare global {

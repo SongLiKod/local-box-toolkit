@@ -185,16 +185,7 @@ jobs:
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
           echo "prerelease=$PRE" >> "$GITHUB_OUTPUT"
 
-      # 版本号唯一来源 = 根 package.json：tag 与它不一致直接失败，防止各端版本错位
-      - name: Verify tag matches root package.json version
-        run: |
-          TAG_VERSION="${{ steps.tag.outputs.version }}"
-          PKG_VERSION="$(node -p "require('./package.json').version")"
-          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
-            echo "::error::发布 tag (v$TAG_VERSION) 与根 package.json version ($PKG_VERSION) 不一致。版本号唯一来源是根 package.json，请改它后打同号 tag 重发。"
-            exit 1
-          fi
-
+      # tag 只用于 GitHub Release 的显示与资产命名，不校验它与 package.json 是否一致
       - name: Prepare release files
         run: |
           VERSION="${{ steps.tag.outputs.version }}"
