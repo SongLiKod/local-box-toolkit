@@ -86,15 +86,4 @@ async function run(): Promise<void> {
 }
 </script>
 
-<style scoped>
-.lb-file {
-  font-size: 24rpx;
-  padding: 12rpx 0;
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-}
-.lb-save {
-  color: var(--color-primary);
-}
-</style>
+

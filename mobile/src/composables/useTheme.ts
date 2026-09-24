@@ -1,4 +1,4 @@
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch } from 'vue'
 import {
   normalizeThemePreference,
   resolveAppearanceTokens,
@@ -47,6 +47,24 @@ export const themeStyle = computed(() =>
     ),
   ),
 )
+
+/** 主题/配色变化时同步原生导航栏颜色（H5 顶栏不随 CSS 变量自动变，否则深色模式下白顶很突兀） */
+function syncNavigationBar(): void {
+  try {
+    const dark = resolvedTheme.value === 'dark'
+    const bgMatch = /--color-bg-page:\s*([^;]+)/.exec(themeStyle.value)
+    const bg = (bgMatch?.[1] ?? '').trim() || (dark ? '#17171a' : '#f5f7fa')
+    uni.setNavigationBarColor({
+      frontColor: dark ? '#ffffff' : '#000000',
+      backgroundColor: bg,
+      animation: { duration: 0, timingFunc: 'linear' },
+    })
+  } catch {
+    /* 平台不支持或时机过早时忽略 */
+  }
+}
+
+watch(themeStyle, syncNavigationBar, { immediate: true })
 
 async function persist(): Promise<void> {
   try {

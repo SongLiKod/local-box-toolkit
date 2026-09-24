@@ -39,7 +39,12 @@ const record = useToolHistory('image-convert')
 
 async function pick(): Promise<void> {
   try {
-    files.value = await chooseFiles('.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg')
+    const picked = await chooseFiles('.jpg,.jpeg,.png,.webp,.gif,.bmp,.svg')
+    files.value = picked
+    uni.showToast({
+      title: picked.length ? `已选择 ${picked.length} 个文件` : '未选择文件',
+      icon: 'none',
+    })
   } catch {
     /* 取消 */
   }
@@ -70,16 +75,3 @@ async function saveAll(): Promise<void> {
   await saveBlobs(results.value, `localbox-pics-${Date.now()}.zip`)
 }
 </script>
-
-<style scoped>
-.lb-file {
-  font-size: 24rpx;
-  padding: 12rpx 0;
-  border-bottom: 1px solid var(--color-border);
-  display: flex;
-  justify-content: space-between;
-}
-.lb-save {
-  color: var(--color-primary);
-}
-</style>

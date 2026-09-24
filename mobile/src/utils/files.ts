@@ -5,11 +5,29 @@ export function chooseFiles(accept: string, multiple = true): Promise<File[]> {
     input.type = 'file'
     input.accept = accept
     input.multiple = multiple
+    // 离屏但不 display:none（部分 WebView/浏览器对不可见 file input 的 click 有兼容差异）
+    input.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0'
+    // 必须挂载到 DOM：游离 input 在 WebView 选完后可能被回收，change 事件不触发导致 Promise 永远挂起
+    document.body.appendChild(input)
+    const settle = () => {
+      input.onchange = null
+      input.onerror = null
+      input.remove()
+    }
     input.onchange = () => {
       const list = input.files ? Array.from(input.files) : []
+      settle()
       resolve(list)
     }
-    input.onerror = () => reject(new Error('选择文件失败'))
+    input.onerror = () => {
+      settle()
+      reject(new Error('选择文件失败'))
+    }
+    // 取消选择时收尾，避免 Promise 悬挂（旧版 WebView 不支持 cancel 事件则保持原行为）
+    input.addEventListener('cancel', () => {
+      settle()
+      reject(new Error('取消选择'))
+    })
     input.click()
     return
     // #endif

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -222,10 +223,12 @@ class MainActivity : AppCompatActivity() {
                         filePathCallback = null
                         false
                     } else {
+                        Log.d("LocalBox", "file chooser: launching system picker")
                         this@MainActivity.startActivityForResult(intent, fileChooserRequestCode)
                         true
                     }
                 } catch (e: Exception) {
+                    Log.w("LocalBox", "file chooser: launch failed", e)
                     filePathCallback = null
                     false
                 }
@@ -262,6 +265,10 @@ class MainActivity : AppCompatActivity() {
                 if (resultCode == Activity.RESULT_OK && data != null)
                     WebChromeClient.FileChooserParams.parseResult(resultCode, data)
                 else null
+            Log.d(
+                "LocalBox",
+                "file chooser: resultCode=$resultCode dataNull=${data == null} uris=${result?.size ?: 0}"
+            )
             filePathCallback?.onReceiveValue(result)
             filePathCallback = null
             return
