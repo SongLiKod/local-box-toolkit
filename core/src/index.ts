@@ -4,6 +4,14 @@ export * from './files'
 export * from './queue'
 export * from './theme/theme'
 export type { TimestampInfo } from './devtools/timestamp'
+export type {
+  ZoneClock,
+  ClockOptions,
+  MeetingSlot,
+  MeetingRange,
+  MeetingPlan,
+  MeetingOptions,
+} from './devtools/worldtime'
 export type { UuidVersion, UuidHistoryPayload } from './devtools/uuid'
 export type { ZonedResult } from './tools/timeconv'
 export type { RenameItem, RenameOptions } from './tools/rename'
@@ -12,9 +20,28 @@ export type { FaceBox } from './idphoto/detect'
 export type { CropRect, TextStyle, WatermarkStyle } from './idphoto/editor'
 export type { HashAlgo } from './devtools/hash'
 export type { PasswordOptions } from './devtools/password'
+export type { VaultEntry, PasswordStrength } from './devtools/vault'
 export type { BarcodeFormat, QrOptions } from './tools/barcode'
+export type {
+  RgbaImage,
+  QrHit,
+  QrCorner,
+  QrContentKind,
+  QrContentInfo,
+  WifiCredential,
+  RenderQrOptions,
+} from './tools/qrscan'
+export type {
+  DupFileLike,
+  DupCandidateGroup,
+  DupGroup,
+  DupProgress,
+  DupStat,
+  RefineOptions,
+} from './tools/dupfile'
 export type { UnitCategory, UnitDef } from './tools/units'
-export type { RGB, HSL } from './tools/color'
+export type { CalcAngle, CalcOptions, CalcResult, CalcFunctionDoc, CalcConstantDoc } from './tools/calc'
+export type { RGB, HSL, HSV } from './tools/color'
 export type { JsonFormatResult } from './devtools/jsonfmt'
 export type { RegexMatch, RegexTestResult } from './devtools/regex'
 export type { JwtDecodeResult, JwtPart } from './devtools/jwt'
@@ -48,12 +75,18 @@ export * as base64Tools from './devtools/base64'
 export * as urlTools from './devtools/urlcode'
 export * as hashTools from './devtools/hash'
 export * as timeTools from './devtools/timestamp'
+export * as worldTools from './devtools/worldtime'
 export * as pwdTools from './devtools/password'
+export * as vaultTools from './devtools/vault'
 export * as codeTools from './tools/barcode'
 export * as unitTools from './tools/units'
+export * as calcTools from './tools/calc'
 export * as colorTools from './tools/color'
 export * as renameTools from './tools/rename'
 export * as textTools from './tools/text'
+export * as todoTools from './tools/todo'
+export * as qrTools from './tools/qrscan'
+export * as dupTools from './tools/dupfile'
 export * as timezoneTools from './tools/timeconv'
 export * as exifTools from './utils/exif'
 export * as jsonTools from './devtools/jsonfmt'

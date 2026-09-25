@@ -117,6 +117,8 @@ ffmpeg.wasm 在浏览器内本地解码转换，不经过服务器。
 - Base64、URL 编码解码：原生 API
 - MD5/SHA 系列哈希：crypto-js
 - 时间戳转换、随机密码、二维码 / 条形码：前端开源库
+- 时间戳扩展能力（多城市世界时钟、今日时间轴、会议时间对比）：`core/src/utils/tz.ts` + `core/src/devtools/worldtime.ts`，基于浏览器 `Intl.DateTimeFormat`（自动适配夏令时），纯本地计算，三端复用
+- 二维码识别：`core/src/tools/qrscan.ts`，`qrcode` 渲染矩阵 + `jsQR` 离线解码（支持反色码、小缩放比、静默区），`describeQrContent` 判定网址/WIFI/电话/短信/邮件/地理位置，`parseWifiQr` 处理转义与隐藏网络；Web 端图片粘贴拖拽 + `getUserMedia` 实时扫码画框，移动端相册/拍照取图
 
 ### 4.3 证件照 & 图片处理模块
 
@@ -126,6 +128,12 @@ ffmpeg.wasm 在浏览器内本地解码转换，不经过服务器。
 ### 4.4 便民工具模块
 
 纯 JS 计算，无重型第三方依赖。
+
+- 计算器：`core/src/tools/calc.ts`，递归下降解析数学表达式（不使用 `eval`），支持四则运算、括号、幂、阶乘、百分号、隐式乘法、千分位逗号、24 个数学函数与 pi/e/tau 常量，角度制/弧度制三角模式，结果按 12 位有效数字格式化；含深度、长度、除零与定义域防护，Web `views/life/Calculator.vue` 与安卓 `pages/life/calc.vue` 复用同一核心。
+- 待办清单：`core/src/tools/todo.ts` 提供 `startOfDay`/`startOfWeek` 周期判断、`splitToday` 分组与 `todayProgress` 完成度（重复任务按自然周/自然日判断"本周期已完成"），存储走 `LocalStore.upsertTodo/setTodoDone/deleteTodo`（上限 500 条，随备份导出与合并导入）；Web `views/life/Todo.vue`、移动端 `pages/life/todo.vue`。
+- 本地保险箱：`core/src/devtools/vault.ts`，WebCrypto `PBKDF2-SHA256`（默认 31 万次迭代）派生 256 位密钥 + `AES-256-GCM` 加密封存，自带 base64 实现；密文经 `LocalStore.getVaultBlob/setVaultBlob` 落库，口令不保存，口令错误与密文篡改返回同一提示；Web 端 60 秒无操作自动锁定、变更 700ms 防抖重封，移动端离开页面即锁定；备份携带密文，但导入时**不覆盖**本机已有保险箱。
+- 重复文件查找：`core/src/tools/dupfile.ts`，`groupBySize` 体积初筛（剔除 0 字节与孤立文件）→ `refineGroups` 注入哈希回调做 SHA-256 精比，支持进度回调与 `shouldStop` 中止，按"可释放空间"降序，`formatDupList` 导出清单；哈希复用 `hashTools.hashFile`，浏览器端只读不删。
+- 全局命令面板（Web）：`web/src/components/CommandPalette.vue`，`Ctrl/Cmd+K` 呼出，聚合 `searchTools`、收藏、最近历史与设置页跳转，输入算式由 `calcTools.evaluate` 直接给出结果并回车复制；全局快捷键统一在组件内挂载/卸载，不污染各工具页。
 
 ## 5. 本地数据存储方案
 
@@ -169,6 +177,6 @@ ffmpeg.wasm 在浏览器内本地解码转换，不经过服务器。
 7. 开发工具集
 8. 证件照与图片 Canvas 编辑
 9. 便民工具集
-10. 本地持久化存储（主题、收藏、历史记录）
+10. 本地持久化存储（主题、收藏、历史记录、便签、待办、保险箱密文）
 11. 完整离线能力
 12. 测试用例

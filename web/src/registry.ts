@@ -90,10 +90,10 @@ export const TOOLS: ToolMeta[] = [
   {
     id: 'timestamp',
     name: '时间戳转换',
-    desc: 'Unix 时间戳与日期时间互转',
+    desc: 'Unix 时间戳与日期时间互转、多城市世界时钟、会议时间对比',
     category: 'dev',
     route: '/dev/timestamp',
-    keywords: ['时间戳', 'unix', 'date'],
+    keywords: ['时间戳', 'unix', 'date', '世界时钟', '时区', '会议时间', 'meeting', 'world clock'],
   },
   {
     id: 'password',
@@ -176,6 +176,14 @@ export const TOOLS: ToolMeta[] = [
     keywords: ['裁剪', '旋转', '水印', '模糊'],
   },
   {
+    id: 'calculator',
+    name: '计算器',
+    desc: '科学计算：四则运算、幂/阶乘/百分号、函数与常量，角度与弧度模式',
+    category: 'life',
+    route: '/life/calc',
+    keywords: ['计算器', 'calculator', '算术', '计算', '数学', 'math', '求值', '科学'],
+  },
+  {
     id: 'units',
     name: '单位换算',
     desc: '长度/面积/体积/重量/速度/时间/存储/压强/功率/温度',
@@ -238,6 +246,39 @@ export const TOOLS: ToolMeta[] = [
     category: 'life',
     route: '/life/notes',
     keywords: ['便签', '笔记', '备忘'],
+  },
+
+  {
+    id: 'todo',
+    name: '待办清单',
+    desc: '今天要做的事：截止日、每天/每周重复、完成度统计',
+    category: 'life',
+    route: '/life/todo',
+    keywords: ['待办', 'todo', '任务', '清单', '打卡'],
+  },
+  {
+    id: 'vault',
+    name: '本地保险箱',
+    desc: '口令加密的私密存储：密码/密钥/卡号，密文只在本机',
+    category: 'life',
+    route: '/life/vault',
+    keywords: ['保险箱', '加密', '私密', '密码', '密钥', 'vault'],
+  },
+  {
+    id: 'qrscan',
+    name: '二维码识别',
+    desc: '图片/摄像头识别二维码，解析网址与WIFI码，离线解码',
+    category: 'dev',
+    route: '/dev/qrscan',
+    keywords: ['二维码', '扫码', '识别', 'qr', '条码', '解码'],
+  },
+  {
+    id: 'dupfinder',
+    name: '重复文件查找',
+    desc: '体积初筛 + SHA-256 内容精比，列出可释放空间',
+    category: 'life',
+    route: '/life/dup',
+    keywords: ['重复', '查重', '相同文件', '清理', '磁盘', '哈希'],
   },
 ]
 

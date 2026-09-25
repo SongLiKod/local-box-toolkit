@@ -1,6 +1,6 @@
 {
   "name": "localbox-mobile",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "description": "LocalBox 安卓APP（uni-app Vue3）",
   "scripts": {

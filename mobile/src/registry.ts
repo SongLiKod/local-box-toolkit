@@ -26,7 +26,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'base64', name: 'Base64编解码', desc: 'UTF-8 安全', icon: '🔐', category: 'dev', route: '/pages/dev/base64', keywords: ['base64', '编码', '解码'] },
   { id: 'urlcode', name: 'URL编解码', desc: 'encode/decode', icon: '🔗', category: 'dev', route: '/pages/dev/url', keywords: ['url', '编码', '解码', '转义'] },
   { id: 'hash', name: '哈希计算', desc: 'MD5/SHA1/SHA256', icon: '🧮', category: 'dev', route: '/pages/dev/hash', keywords: ['md5', 'sha', '哈希', '摘要'] },
-  { id: 'timestamp', name: '时间戳转换', desc: '时间戳与日期互转', icon: '⏱️', category: 'dev', route: '/pages/dev/timestamp', keywords: ['时间戳', 'unix', 'date'] },
+  { id: 'timestamp', name: '时间戳转换', desc: '时间戳互转、世界时钟、会议时间对比', icon: '⏱️', category: 'dev', route: '/pages/dev/timestamp', keywords: ['时间戳', 'unix', 'date', '世界时钟', '时区', '会议时间'] },
   { id: 'password', name: '随机密码', desc: 'Web Crypto 本地随机', icon: '🔑', category: 'dev', route: '/pages/dev/password', keywords: ['密码', '随机', 'password'] },
   { id: 'barcode', name: '二维码/条形码', desc: '本地生成', icon: '📲', category: 'dev', route: '/pages/dev/barcode', keywords: ['二维码', 'barcode', 'qr', '条码'] },
   { id: 'jsonfmt', name: 'JSON格式化', desc: '格式化/压缩/校验', icon: '🧩', category: 'dev', route: '/pages/dev/json', keywords: ['json', '格式化', '压缩', '校验'] },
@@ -37,6 +37,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'cron', name: 'Cron表达式', desc: '生成/解析与下次执行时间', icon: '🗓️', category: 'dev', route: '/pages/dev/cron', keywords: ['cron', '表达式', '定时', '计划任务', 'quartz', 'crontab'] },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', icon: '🪪', category: 'photo', route: '/pages/photo/id', keywords: ['证件照', '一寸', '二寸', '签证', '换底色'] },
   { id: 'image-edit', name: '图片编辑', desc: '裁剪/缩放/旋转/水印/去底色', icon: '✏️', category: 'photo', route: '/pages/photo/edit', keywords: ['裁剪', '旋转', '水印', '模糊'] },
+  { id: 'calculator', name: '计算器', desc: '四则运算/函数常量/角度弧度', icon: '➗', category: 'life', route: '/pages/life/calc', keywords: ['计算器', 'calculator', '算术', '计算', 'math', '求值'] },
   { id: 'units', name: '单位换算', desc: '长度/面积/重量/温度互转', icon: '📏', category: 'life', route: '/pages/life/units', keywords: ['单位', '换算', '长度', '重量'] },
   { id: 'time-convert', name: '时间换算', desc: '时区换算/日期差/加减天数', icon: '📆', category: 'life', route: '/pages/life/time', keywords: ['时区', '日期', '倒计时'] },
   { id: 'color', name: '颜色取色器', desc: 'HEX/RGB/HSL与图片取色', icon: '🎨', category: 'life', route: '/pages/life/color', keywords: ['颜色', '取色', 'hex', 'rgb'] },
@@ -45,6 +46,11 @@ export const TOOLS: ToolMeta[] = [
   { id: 'exif', name: '图片EXIF清除', desc: '剥离照片元数据保护隐私', icon: '🧹', category: 'life', route: '/pages/life/exif', keywords: ['exif', '元数据', '隐私'] },
   { id: 'diff', name: '文本对比', desc: '逐行对比增删', icon: '🆚', category: 'life', route: '/pages/life/diff', keywords: ['对比', 'diff', '文本'] },
   { id: 'notes', name: '本地便签', desc: '本机保存备忘', icon: '📝', category: 'life', route: '/pages/life/notes', keywords: ['便签', '笔记', '备忘'] },
+
+  { id: 'todo', name: '待办清单', desc: '截止日与每天/每周重复的任务', icon: '📌', category: 'life', route: '/pages/life/todo', keywords: ['待办', 'todo', '任务', '清单', '打卡'] },
+  { id: 'vault', name: '本地保险箱', desc: '口令加密的私密存储', icon: '🔐', category: 'life', route: '/pages/life/vault', keywords: ['保险箱', '加密', '密码', '密钥', '私密'] },
+  { id: 'qrscan', name: '二维码识别', desc: '图片识别网址与WIFI码', icon: '📷', category: 'dev', route: '/pages/dev/qrscan', keywords: ['二维码', '扫码', '识别', 'qr'] },
+  { id: 'dupfinder', name: '重复文件查找', desc: '体积初筛 + 哈希精比', icon: '📂', category: 'life', route: '/pages/life/dup', keywords: ['重复', '查重', '相同文件', '清理'] },
 ]
 
 export function toolById(id: string): ToolMeta | undefined {

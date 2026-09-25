@@ -42,6 +42,14 @@ onLaunch(() => {
 page {
   background-color: var(--color-bg-page, #f5f7fa);
   -webkit-font-smoothing: antialiased;
+  scrollbar-width: none;
+}
+
+/* 隐藏滚动条：手机端原生本就不显示，H5 桌面预览时更接近 APP 观感 */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
 }
 
 /* 消除移动端点击时的灰色闪屏 */
@@ -56,6 +64,19 @@ image,
 scroll-view,
 label {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* uni H5 默认给 html/body 设 user-select:none，会波及表单控件：
+   显式放开，输入框才能正常聚焦、长按全选/复制粘贴 */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+/* 结果/输出区长按可选中复制（同样受上面的全局 none 影响） */
+.lb-output {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .lb-page {
@@ -92,23 +113,48 @@ label {
   color: var(--color-text-secondary);
   margin: 24rpx 0 12rpx;
 }
+/* ⚠️ 关键修复：uni-input 默认自带 height:1.4em + overflow:hidden。
+   若在类名上再叠加 border-box + padding，内容区会被压成 0（点不进去、打不了字）。
+   必须显式放开高度，并给足 ≥44px 的触控高度。 */
 .lb-input {
+  display: block;
+  height: auto;
+  min-height: 88rpx;
   background: var(--color-bg-page);
   border: 1px solid var(--color-border);
   border-radius: 12rpx;
-  padding: 20rpx;
+  padding: 24rpx 20rpx;
   font-size: 28rpx;
+  line-height: 1.5;
   color: var(--color-text-primary);
+  caret-color: var(--color-primary);
   width: 100%;
   box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
   transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+/* uni 的占位符是独立元素且写死 gray：改随主题色，超长用省略号 */
+.lb-input .uni-input-placeholder {
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lb-textarea .uni-textarea-placeholder {
+  color: var(--color-text-secondary);
+}
+.lb-input::placeholder {
+  color: var(--color-text-secondary);
 }
 .lb-input:focus-within {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4rpx var(--color-primary-light);
 }
 .lb-textarea {
-  min-height: 220rpx;
+  /* 放开固定高后，textarea 高度由 min-height 决定（≈ uni 默认 150px）；
+     便签等页面可用 scoped 的更大 min-height 覆盖 */
+  min-height: 300rpx;
+  line-height: 1.6;
 }
 .lb-btn {
   display: block;
@@ -163,9 +209,10 @@ label {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 64rpx;
+  /* 触控热区从 32px 提到 40px（太小难点） */
+  min-height: 80rpx;
   box-sizing: border-box;
-  padding: 14rpx 28rpx;
+  padding: 16rpx 30rpx;
   border-radius: 14rpx;
   background: var(--color-bg-page);
   border: 1px solid var(--color-border);
@@ -250,8 +297,9 @@ label {
 }
 .lb-save {
   margin-left: auto;
-  padding: 12rpx 28rpx;
-  min-height: 56rpx;
+  /* 热区从 32px 提到 36px */
+  padding: 16rpx 28rpx;
+  min-height: 72rpx;
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;

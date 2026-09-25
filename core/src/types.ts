@@ -65,6 +65,26 @@ export interface NoteItem {
   updatedAt: number
 }
 
+/** 待办重复规则：none = 一次性；daily = 每天；weekly = 每周（按自然周，周一起算） */
+export type TodoRepeat = 'none' | 'daily' | 'weekly'
+
+import type { SealedVault } from './devtools/vault'
+
+export type { SealedVault }
+
+export interface TodoItem {
+  id: string
+  title: string
+  done: boolean
+  /** 截止日（本地 00:00 时间戳）；缺省表示无期限、始终算"今天要做的" */
+  due?: number
+  repeat: TodoRepeat
+  /** 最近一次勾选完成的时间，用于判断重复任务本周期是否已完成 */
+  doneAt?: number
+  createdAt: number
+  updatedAt: number
+}
+
 export interface LocalBackup {
   version: 1
   exportedAt: number
@@ -73,4 +93,7 @@ export interface LocalBackup {
   history?: HistoryItem[]
   toolParams?: Record<string, unknown>
   notes?: NoteItem[]
+  todos?: TodoItem[]
+  /** 已加密的保险箱密文，随备份走但导入时不会覆盖已有保险箱 */
+  vault?: SealedVault | null
 }

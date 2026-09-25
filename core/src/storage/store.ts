@@ -1,5 +1,15 @@
 import type { KVAdapter } from './adapter'
-import type { FavoriteItem, HistoryItem, LocalBackup, NoteItem, ThemeMode, ThemePreference } from '../types'
+import type {
+  FavoriteItem,
+  HistoryItem,
+  LocalBackup,
+  NoteItem,
+  SealedVault,
+  ThemeMode,
+  ThemePreference,
+  TodoItem,
+  TodoRepeat,
+} from '../types'
 import { DEFAULT_THEME_PREFERENCE, normalizeThemePreference } from '../theme/theme'
 import type { ThemePaletteId } from '../theme/palettes'
 
@@ -9,9 +19,12 @@ const KEY_FAV = 'favorites'
 const KEY_HIST = 'history'
 const KEY_PARAMS = 'toolParams'
 const KEY_NOTES = 'notes'
+const KEY_TODOS = 'todos'
+const KEY_VAULT = 'vault'
 
 const HISTORY_LIMIT = 500
 const NOTES_LIMIT = 200
+const TODOS_LIMIT = 500
 
 /** 本地持久化仓库：主题、收藏、历史、参数配置（无后端、不跨设备同步） */
 export class LocalStore {
@@ -143,6 +156,68 @@ export class LocalStore {
     await this.adapter.set(KEY_NOTES, list)
   }
 
+  async getTodos(): Promise<TodoItem[]> {
+    return (await this.adapter.get<TodoItem[]>(KEY_TODOS)) ?? []
+  }
+
+  /** 新建或修改待办；due 传 undefined 表示清空截止日 */
+  async upsertTodo(input: {
+    id?: string
+    title: string
+    due?: number
+    repeat?: TodoRepeat
+  }): Promise<TodoItem> {
+    const list = await this.getTodos()
+    const now = Date.now()
+    const title = input.title.trim() || '未命名待办'
+    const repeat: TodoRepeat = input.repeat ?? 'none'
+    if (input.id) {
+      const idx = list.findIndex((t) => t.id === input.id)
+      if (idx >= 0) {
+        list[idx] = { ...list[idx], title, due: input.due, repeat, updatedAt: now }
+        await this.adapter.set(KEY_TODOS, list)
+        return list[idx]
+      }
+    }
+    const todo: TodoItem = {
+      id: `t_${now}_${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      done: false,
+      due: input.due,
+      repeat,
+      createdAt: now,
+      updatedAt: now,
+    }
+    list.unshift(todo)
+    if (list.length > TODOS_LIMIT) list.length = TODOS_LIMIT
+    await this.adapter.set(KEY_TODOS, list)
+    return todo
+  }
+
+  async setTodoDone(id: string, done: boolean): Promise<TodoItem | undefined> {
+    const list = await this.getTodos()
+    const idx = list.findIndex((t) => t.id === id)
+    if (idx < 0) return undefined
+    const now = Date.now()
+    list[idx] = { ...list[idx], done, doneAt: done ? now : undefined, updatedAt: now }
+    await this.adapter.set(KEY_TODOS, list)
+    return list[idx]
+  }
+
+  async deleteTodo(id: string): Promise<void> {
+    const list = (await this.getTodos()).filter((t) => t.id !== id)
+    await this.adapter.set(KEY_TODOS, list)
+  }
+
+  /** 取出保险箱密文（内容是加密的，仓库本身不解密） */
+  async getVaultBlob(): Promise<SealedVault | null> {
+    return (await this.adapter.get<SealedVault>(KEY_VAULT)) ?? null
+  }
+
+  async setVaultBlob(v: SealedVault | null): Promise<void> {
+    await this.adapter.set(KEY_VAULT, v ?? undefined)
+  }
+
   async exportBackup(): Promise<LocalBackup> {
     return {
       version: 1,
@@ -152,6 +227,8 @@ export class LocalStore {
       history: await this.getHistory(),
       toolParams: await this.getAllToolParams(),
       notes: await this.getNotes(),
+      todos: await this.getTodos(),
+      vault: await this.getVaultBlob(),
     }
   }
 
@@ -209,6 +286,27 @@ export class LocalStore {
         if (merged.length > NOTES_LIMIT) merged.length = NOTES_LIMIT
         await this.adapter.set(KEY_NOTES, merged)
       }
+    }
+
+    if (data.todos) {
+      if (mode === 'replace') {
+        await this.adapter.set(KEY_TODOS, data.todos.slice(0, TODOS_LIMIT))
+      } else {
+        const cur = await this.getTodos()
+        const map = new Map(cur.map((t) => [t.id, t]))
+        for (const t of data.todos) {
+          const old = map.get(t.id)
+          if (!old || t.updatedAt >= old.updatedAt) map.set(t.id, t)
+        }
+        const merged = [...map.values()].sort((a, b) => b.updatedAt - a.updatedAt)
+        if (merged.length > TODOS_LIMIT) merged.length = TODOS_LIMIT
+        await this.adapter.set(KEY_TODOS, merged)
+      }
+    }
+
+    // 保险箱密文随备份走，但绝不覆盖本机已有的保险箱（口令不同会变成打不开的孤儿）
+    if (data.vault && (mode === 'replace' || !(await this.getVaultBlob()))) {
+      await this.setVaultBlob(data.vault)
     }
   }
 }
