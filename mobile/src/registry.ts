@@ -37,6 +37,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'cron', name: 'Cron表达式', desc: '生成/解析与下次执行时间', icon: '🗓️', category: 'dev', route: '/pages/dev/cron', keywords: ['cron', '表达式', '定时', '计划任务', 'quartz', 'crontab'] },
   { id: 'idphoto', name: '证件照制作', desc: '人脸/抠图/换底/300DPI', icon: '🪪', category: 'photo', route: '/pages/photo/id', keywords: ['证件照', '一寸', '二寸', '签证', '换底色'] },
   { id: 'image-edit', name: '图片编辑', desc: '裁剪/缩放/旋转/水印/去底色', icon: '✏️', category: 'photo', route: '/pages/photo/edit', keywords: ['裁剪', '旋转', '水印', '模糊'] },
+  { id: 'calculator', name: '计算器', desc: '四则运算/函数常量/角度弧度', icon: '➗', category: 'life', route: '/pages/life/calc', keywords: ['计算器', 'calculator', '算术', '计算', 'math', '求值'] },
   { id: 'units', name: '单位换算', desc: '长度/面积/重量/温度互转', icon: '📏', category: 'life', route: '/pages/life/units', keywords: ['单位', '换算', '长度', '重量'] },
   { id: 'time-convert', name: '时间换算', desc: '时区换算/日期差/加减天数', icon: '📆', category: 'life', route: '/pages/life/time', keywords: ['时区', '日期', '倒计时'] },
   { id: 'color', name: '颜色取色器', desc: 'HEX/RGB/HSL与图片取色', icon: '🎨', category: 'life', route: '/pages/life/color', keywords: ['颜色', '取色', 'hex', 'rgb'] },

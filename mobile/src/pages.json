@@ -24,6 +24,7 @@
     { "path": "pages/dev/cron", "style": { "navigationBarTitleText": "Cron表达式" } },
     { "path": "pages/photo/id", "style": { "navigationBarTitleText": "证件照制作" } },
     { "path": "pages/photo/edit", "style": { "navigationBarTitleText": "图片编辑" } },
+    { "path": "pages/life/calc", "style": { "navigationBarTitleText": "计算器" } },
     { "path": "pages/life/units", "style": { "navigationBarTitleText": "单位换算" } },
     { "path": "pages/life/time", "style": { "navigationBarTitleText": "时间换算" } },
     { "path": "pages/life/color", "style": { "navigationBarTitleText": "颜色取色器" } },

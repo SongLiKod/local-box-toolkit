@@ -176,6 +176,14 @@ export const TOOLS: ToolMeta[] = [
     keywords: ['裁剪', '旋转', '水印', '模糊'],
   },
   {
+    id: 'calculator',
+    name: '计算器',
+    desc: '科学计算：四则运算、幂/阶乘/百分号、函数与常量，角度与弧度模式',
+    category: 'life',
+    route: '/life/calc',
+    keywords: ['计算器', 'calculator', '算术', '计算', '数学', 'math', '求值', '科学'],
+  },
+  {
     id: 'units',
     name: '单位换算',
     desc: '长度/面积/体积/重量/速度/时间/存储/压强/功率/温度',

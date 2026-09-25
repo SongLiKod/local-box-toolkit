@@ -26,6 +26,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/photo/id', component: () => import('./views/photo/IdPhoto.vue') },
   { path: '/photo/edit', component: () => import('./views/photo/ImageEdit.vue') },
   { path: '/life/units', component: () => import('./views/life/Units.vue') },
+  { path: '/life/calc', component: () => import('./views/life/Calculator.vue') },
   { path: '/life/time', component: () => import('./views/life/TimeConvert.vue') },
   { path: '/life/color', component: () => import('./views/life/Color.vue') },
   { path: '/life/rename', component: () => import('./views/life/Rename.vue') },
