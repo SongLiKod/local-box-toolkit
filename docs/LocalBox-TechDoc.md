@@ -117,6 +117,7 @@ ffmpeg.wasm 在浏览器内本地解码转换，不经过服务器。
 - Base64、URL 编码解码：原生 API
 - MD5/SHA 系列哈希：crypto-js
 - 时间戳转换、随机密码、二维码 / 条形码：前端开源库
+- 时间戳扩展能力（多城市世界时钟、今日时间轴、会议时间对比）：`core/src/utils/tz.ts` + `core/src/devtools/worldtime.ts`，基于浏览器 `Intl.DateTimeFormat`（自动适配夏令时），纯本地计算，三端复用
 
 ### 4.3 证件照 & 图片处理模块
 

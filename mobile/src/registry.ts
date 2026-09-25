@@ -26,7 +26,7 @@ export const TOOLS: ToolMeta[] = [
   { id: 'base64', name: 'Base64编解码', desc: 'UTF-8 安全', icon: '🔐', category: 'dev', route: '/pages/dev/base64', keywords: ['base64', '编码', '解码'] },
   { id: 'urlcode', name: 'URL编解码', desc: 'encode/decode', icon: '🔗', category: 'dev', route: '/pages/dev/url', keywords: ['url', '编码', '解码', '转义'] },
   { id: 'hash', name: '哈希计算', desc: 'MD5/SHA1/SHA256', icon: '🧮', category: 'dev', route: '/pages/dev/hash', keywords: ['md5', 'sha', '哈希', '摘要'] },
-  { id: 'timestamp', name: '时间戳转换', desc: '时间戳与日期互转', icon: '⏱️', category: 'dev', route: '/pages/dev/timestamp', keywords: ['时间戳', 'unix', 'date'] },
+  { id: 'timestamp', name: '时间戳转换', desc: '时间戳互转、世界时钟、会议时间对比', icon: '⏱️', category: 'dev', route: '/pages/dev/timestamp', keywords: ['时间戳', 'unix', 'date', '世界时钟', '时区', '会议时间'] },
   { id: 'password', name: '随机密码', desc: 'Web Crypto 本地随机', icon: '🔑', category: 'dev', route: '/pages/dev/password', keywords: ['密码', '随机', 'password'] },
   { id: 'barcode', name: '二维码/条形码', desc: '本地生成', icon: '📲', category: 'dev', route: '/pages/dev/barcode', keywords: ['二维码', 'barcode', 'qr', '条码'] },
   { id: 'jsonfmt', name: 'JSON格式化', desc: '格式化/压缩/校验', icon: '🧩', category: 'dev', route: '/pages/dev/json', keywords: ['json', '格式化', '压缩', '校验'] },

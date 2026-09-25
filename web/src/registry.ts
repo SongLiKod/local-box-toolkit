@@ -90,10 +90,10 @@ export const TOOLS: ToolMeta[] = [
   {
     id: 'timestamp',
     name: '时间戳转换',
-    desc: 'Unix 时间戳与日期时间互转',
+    desc: 'Unix 时间戳与日期时间互转、多城市世界时钟、会议时间对比',
     category: 'dev',
     route: '/dev/timestamp',
-    keywords: ['时间戳', 'unix', 'date'],
+    keywords: ['时间戳', 'unix', 'date', '世界时钟', '时区', '会议时间', 'meeting', 'world clock'],
   },
   {
     id: 'password',
