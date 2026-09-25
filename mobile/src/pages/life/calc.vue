@@ -282,9 +282,10 @@ function copyResult(): void {
 }
 .calc-input {
   width: 100%;
+  min-height: 76rpx;
   font-size: 30rpx;
   text-align: right;
-  padding: 8rpx 0;
+  padding: 16rpx 0;
   border-bottom: 1px dashed var(--color-border);
   font-family: Consolas, Monaco, monospace;
 }

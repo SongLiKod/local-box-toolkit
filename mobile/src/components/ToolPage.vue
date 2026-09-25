@@ -55,7 +55,8 @@ onMounted(refresh)
 .lb-fav {
   font-size: 26rpx;
   color: var(--color-text-secondary);
-  padding: 14rpx 24rpx;
+  /* 触控热区加大（原约 30px，偏难点） */
+  padding: 20rpx 30rpx;
   margin-right: -8rpx;
   background: var(--color-bg-page);
   border: 1px solid var(--color-border);
