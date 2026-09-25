@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { LocalStore } from '../src/storage/store'
 import { MemoryAdapter } from '../src/storage/memory'
+import { sealVault } from '../src/devtools/vault'
 
 function mk(): LocalStore {
   return new LocalStore(new MemoryAdapter())
@@ -100,6 +101,66 @@ describe('本地持久化仓库', () => {
     expect((await s.getNotes())[0].body).toBe('world')
     await s.deleteNote(n.id)
     expect(await s.getNotes()).toEqual([])
+  })
+
+  it('待办增改删与完成状态', async () => {
+    const s = mk()
+    const t = await s.upsertTodo({ title: '写周报', repeat: 'daily' })
+    expect(await s.getTodos()).toHaveLength(1)
+    expect((await s.getTodos())[0].repeat).toBe('daily')
+
+    await s.upsertTodo({ id: t.id, title: '写周报（改）', due: 1700000000000, repeat: 'none' })
+    const one = (await s.getTodos())[0]
+    expect(one.title).toBe('写周报（改）')
+    expect(one.due).toBe(1700000000000)
+    expect(one.repeat).toBe('none')
+
+    const done = await s.setTodoDone(t.id, true)
+    expect(done?.done).toBe(true)
+    expect(done?.doneAt).toBeGreaterThan(0)
+    expect((await s.setTodoDone(t.id, false))?.doneAt).toBeUndefined()
+
+    await s.deleteTodo(t.id)
+    expect(await s.getTodos()).toEqual([])
+    expect(await s.setTodoDone('missing', true)).toBeUndefined()
+  })
+
+  it('待办随备份导出并可合并', async () => {
+    const a = mk()
+    await a.upsertTodo({ title: 't1' })
+    const bak = await a.exportBackup()
+    expect(bak.todos).toHaveLength(1)
+    const b = mk()
+    await b.upsertTodo({ title: 't2' })
+    await b.importBackup(bak, 'merge')
+    expect((await b.getTodos()).map((t) => t.title).sort()).toEqual(['t1', 't2'])
+  })
+
+  it('保险箱密文存取与备份导入策略', async () => {
+    const a = mk()
+    expect(await a.getVaultBlob()).toBeNull()
+    const sealed = await sealVault('pw-a', [], 1000)
+    await a.setVaultBlob(sealed)
+    expect((await a.getVaultBlob())?.ct).toBe(sealed.ct)
+
+    const bak = await a.exportBackup()
+    expect(bak.vault?.ct).toBe(sealed.ct)
+
+    // merge：本机已有保险箱 → 绝不覆盖
+    const b = mk()
+    const mine = await sealVault('pw-b', [], 1000)
+    await b.setVaultBlob(mine)
+    await b.importBackup(bak, 'merge')
+    expect((await b.getVaultBlob())?.ct).toBe(mine.ct)
+
+    // merge：本机没有保险箱 → 才导入
+    const c = mk()
+    await c.importBackup(bak, 'merge')
+    expect((await c.getVaultBlob())?.ct).toBe(sealed.ct)
+
+    // replace：按备份覆盖
+    await b.importBackup(bak, 'replace')
+    expect((await b.getVaultBlob())?.ct).toBe(sealed.ct)
   })
 
   it('备份导出导入可合并', async () => {

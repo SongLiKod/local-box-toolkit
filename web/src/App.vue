@@ -78,7 +78,7 @@
           <el-input
             v-model="search"
             class="lb-search"
-            placeholder="过滤左侧菜单（离线本地）"
+            placeholder="过滤左侧菜单 · Ctrl+K 全局搜索"
             clearable
             @keyup.enter="onSearchEnter"
           />
@@ -118,6 +118,7 @@
     </div>
   </Teleport>
   <ImageViewer />
+  <CommandPalette />
 </template>
 
 <script setup lang="ts">
@@ -125,6 +126,7 @@ import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ThemeSwitch from './components/ThemeSwitch.vue'
 import ImageViewer from './components/ImageViewer.vue'
+import CommandPalette from './components/CommandPalette.vue'
 import { CATEGORIES, TOOLS, searchTools, type ToolMeta } from './registry'
 import { favorites, loadFavorites } from './composables/useFavorites'
 

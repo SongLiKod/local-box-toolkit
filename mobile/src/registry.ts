@@ -46,6 +46,11 @@ export const TOOLS: ToolMeta[] = [
   { id: 'exif', name: '图片EXIF清除', desc: '剥离照片元数据保护隐私', icon: '🧹', category: 'life', route: '/pages/life/exif', keywords: ['exif', '元数据', '隐私'] },
   { id: 'diff', name: '文本对比', desc: '逐行对比增删', icon: '🆚', category: 'life', route: '/pages/life/diff', keywords: ['对比', 'diff', '文本'] },
   { id: 'notes', name: '本地便签', desc: '本机保存备忘', icon: '📝', category: 'life', route: '/pages/life/notes', keywords: ['便签', '笔记', '备忘'] },
+
+  { id: 'todo', name: '待办清单', desc: '截止日与每天/每周重复的任务', icon: '📌', category: 'life', route: '/pages/life/todo', keywords: ['待办', 'todo', '任务', '清单', '打卡'] },
+  { id: 'vault', name: '本地保险箱', desc: '口令加密的私密存储', icon: '🔐', category: 'life', route: '/pages/life/vault', keywords: ['保险箱', '加密', '密码', '密钥', '私密'] },
+  { id: 'qrscan', name: '二维码识别', desc: '图片识别网址与WIFI码', icon: '📷', category: 'dev', route: '/pages/dev/qrscan', keywords: ['二维码', '扫码', '识别', 'qr'] },
+  { id: 'dupfinder', name: '重复文件查找', desc: '体积初筛 + 哈希精比', icon: '📂', category: 'life', route: '/pages/life/dup', keywords: ['重复', '查重', '相同文件', '清理'] },
 ]
 
 export function toolById(id: string): ToolMeta | undefined {

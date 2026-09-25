@@ -247,6 +247,39 @@ export const TOOLS: ToolMeta[] = [
     route: '/life/notes',
     keywords: ['便签', '笔记', '备忘'],
   },
+
+  {
+    id: 'todo',
+    name: '待办清单',
+    desc: '今天要做的事：截止日、每天/每周重复、完成度统计',
+    category: 'life',
+    route: '/life/todo',
+    keywords: ['待办', 'todo', '任务', '清单', '打卡'],
+  },
+  {
+    id: 'vault',
+    name: '本地保险箱',
+    desc: '口令加密的私密存储：密码/密钥/卡号，密文只在本机',
+    category: 'life',
+    route: '/life/vault',
+    keywords: ['保险箱', '加密', '私密', '密码', '密钥', 'vault'],
+  },
+  {
+    id: 'qrscan',
+    name: '二维码识别',
+    desc: '图片/摄像头识别二维码，解析网址与WIFI码，离线解码',
+    category: 'dev',
+    route: '/dev/qrscan',
+    keywords: ['二维码', '扫码', '识别', 'qr', '条码', '解码'],
+  },
+  {
+    id: 'dupfinder',
+    name: '重复文件查找',
+    desc: '体积初筛 + SHA-256 内容精比，列出可释放空间',
+    category: 'life',
+    route: '/life/dup',
+    keywords: ['重复', '查重', '相同文件', '清理', '磁盘', '哈希'],
+  },
 ]
 
 export function toolById(id: string): ToolMeta | undefined {

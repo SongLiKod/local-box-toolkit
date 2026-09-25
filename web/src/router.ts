@@ -17,6 +17,7 @@ const routes: RouteRecordRaw[] = [
   { path: '/dev/timestamp', component: () => import('./views/dev/Timestamp.vue') },
   { path: '/dev/password', component: () => import('./views/dev/Password.vue') },
   { path: '/dev/barcode', component: () => import('./views/dev/Barcode.vue') },
+  { path: '/dev/qrscan', component: () => import('./views/dev/QrScan.vue') },
   { path: '/dev/json', component: () => import('./views/dev/JsonFmt.vue') },
   { path: '/dev/regex', component: () => import('./views/dev/Regex.vue') },
   { path: '/dev/jwt', component: () => import('./views/dev/Jwt.vue') },
@@ -34,6 +35,9 @@ const routes: RouteRecordRaw[] = [
   { path: '/life/exif', component: () => import('./views/life/Exif.vue') },
   { path: '/life/diff', component: () => import('./views/life/Diff.vue') },
   { path: '/life/notes', component: () => import('./views/life/Notes.vue') },
+  { path: '/life/todo', component: () => import('./views/life/Todo.vue') },
+  { path: '/life/vault', component: () => import('./views/life/Vault.vue') },
+  { path: '/life/dup', component: () => import('./views/life/DupFinder.vue') },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
 
